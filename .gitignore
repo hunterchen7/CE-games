@@ -1,7 +1,3 @@
-# CE C Toolchain build artifacts
-*/obj/
-*/bin/
-
 # macOS
 .DS_Store
 

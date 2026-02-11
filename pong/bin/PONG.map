@@ -1,0 +1,155 @@
+Section          Base   Top    High   Length
+---------------- ------ ------ ------ -------
+.icon            D1A882 D1A9A0           11Eh
+.init.libs       D1A9A0 D1A9F8            58h
+.libs            D1A9F8 D1AA55            5Dh
+.init.clock      D1AA55 D1AA70            1Bh
+.init.reruncheck D1AA70 D1AA70             0h
+.init            D1AA70 D1AA9A            2Ah
+.fini            D1AA9A D1AACE            34h
+.text            D1AACE D1BFFC          152Eh
+.data            D1BFFC D1C00C            10h
+.rodata          D1C00C D1C205           1F9h
+.init_array      000000 000000             0h
+.ctors           000000 000000             0h
+.dtors           000000 000000             0h
+.fini_array      000000 000000             0h
+.bss             D052C6 D05322 D13FD8     5Ch
+.header          D1A87F D1A882             3h
+
+Label                        Value
+--------------------------   ------
+___low_bss                 = D052C6
+___len_bss                 = 00005C
+___heaptop                 = D13FD8
+___heapbot                 = D05322
+___libs                    = D1A9F8
+___init_array_count        = 000000
+___ctors_count             = 000000
+___dtors_count             = 000000
+___fini_array_count        = 000000
+__stack                    = D1A87E
+__iand                     = D1AACE
+__frameset                 = D1AAE5
+__frameset0                = D1AAF3
+__idivs                    = D1AAFE
+__idvrms                   = D1AB05
+__idvrmu                   = D1AB33
+__imulu                    = D1AB4B
+__ineg                     = D1AB7B
+__irems                    = D1AB84
+__ishl                     = D1AB8C
+__ishrs                    = D1ABB7
+__ishru                    = D1ABB2
+__lcmpu                    = D1ABF3
+__lsub                     = D1ABFB
+__ior                      = D1AC05
+__ftol                     = 00027C
+__ftoul                    = 00027C
+__ltof                     = 000284
+__setflag                  = 000218
+__ultof                    = 000280
+__sor                      = D1AC1C
+_atomic_load_increasing_32 = D1AC25
+_os_DisableHomeTextBuffer  = D1AC4A
+_os_EnableHomeTextBuffer   = D1AC5C
+_random                    = D1AC6E
+__setstate                 = D1ACCC
+__state                    = D1BFFC
+_clock                     = D1ACDC
+_strlen                    = 0000D4
+_rand                      = D1ACE7
+_srand                     = D1ACF4
+.missingappvar             = D1C00C
+.libloadname               = D1C011
+.libloadnamelen            = 000007
+.webaddress                = D1C019
+___init_clock              = D1AA55
+__start                    = D1AA70
+___exithl                  = D1AA9A
+skip._exit                 = D1AA9A
+skip.__Exit                = D1AA9A
+skip._abort                = D1AA9A
+_exit.sp                   = D1AA9B
+_exit.flash_wait_states    = D1AAA5
+_main                      = D1ACFC
+JTI0_0                     = D1C02E
+_apply_theme               = D1B8A0
+_start_level               = D1B92E
+_compute_infinite_cfg      = D1B99B
+_reset_ball                = D1BBC7
+_draw_menu_item            = D1BC67
+_draw_game                 = D1BCFD
+_rand_bright_color         = D1BF2E
+_state                     = D052C6
+_menu_cursor               = D052C9
+_running                   = D052CC
+_levels                    = D1C03D
+_cur_g1                    = D052CD
+_cur_g6                    = D052CE
+_cur_g7                    = D052CF
+_prev_g1                   = D052D0
+_prev_g6                   = D052D1
+_prev_g7                   = D052D2
+_current_level             = D052D3
+_level_select_cursor       = D052D6
+_active_cfg                = D052D9
+_paddle1_y                 = D052F9
+_paddle2_y                 = D052FC
+_score1                    = D052FF
+_score2                    = D05302
+_lives                     = D05305
+_infinite_mode             = D05308
+_paused                    = D05309
+_last_scorer               = D0530C
+_ball_speed_fp             = D0530F
+_ball_dy                   = D05312
+_ball_x                    = D05315
+_ball_y                    = D05318
+_ball_dx                   = D0531B
+_.str                      = D1C0DD
+_.str.1                    = D1C0E2
+_.str.2                    = D1C0E7
+_.str.3                    = D1C0F0
+_.str.4                    = D1C0F7
+_.str.5                    = D1C120
+_.str.6                    = D1C12D
+_.str.7                    = D1C134
+_level_names               = D1C138
+_.str.8                    = D1C147
+_.str.9                    = D1C14F
+_.str.10                   = D1C157
+_.str.11                   = D1C167
+_.str.12                   = D1C171
+_.str.13                   = D1C179
+_.str.14                   = D1C180
+_.str.15                   = D1C190
+_.str.16                   = D1C194
+_heart_bmp                 = D1C197
+_game_over_win             = D0531E
+_transition_timer          = D0531F
+_.str.17                   = D1C19D
+_.str.18                   = D1C1A8
+_.str.19                   = D1C1B0
+_.str.20                   = D1C1C8
+_.str.21                   = D1C1D1
+_.str.22                   = D1C1DC
+_.str.23                   = D1C1E6
+_.str.24                   = D1C1F0
+lib.LibLoad                = D1A9F8
+_#gfx_Begin                = D1AA0B
+_#gfx_End                  = D1AA0F
+_#gfx_SetColor             = D1AA13
+_#gfx_FillScreen           = D1AA17
+_#gfx_SetPixel             = D1AA1B
+_#gfx_SetDraw              = D1AA1F
+_#gfx_SwapDraw             = D1AA23
+_#gfx_PrintInt             = D1AA27
+_#gfx_PrintString          = D1AA2B
+_#gfx_PrintStringXY        = D1AA2F
+_#gfx_SetTextXY            = D1AA33
+_#gfx_SetTextFGColor       = D1AA37
+_#gfx_HorizLine_NoClip     = D1AA3B
+_#gfx_FillRectangle_NoClip = D1AA3F
+_#gfx_SetTextScale         = D1AA43
+_#kb_Scan                  = D1AA51

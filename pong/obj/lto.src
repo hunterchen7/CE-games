@@ -1,0 +1,2427 @@
+	section	.text,"ax",@progbits
+	assume	adl = 1
+	section	.text,"ax",@progbits
+	public	_main
+_main:
+	ld	hl, -25
+	call	__frameset
+	call	_gfx_Begin
+	ld	hl, 1
+	push	hl
+	call	_gfx_SetDraw
+	pop	hl
+	call	_clock
+	push	hl
+	call	_srand
+	pop	hl
+	or	a, a
+	sbc	hl, hl
+	ld	(_state), hl
+	ld	(_menu_cursor), hl
+	ld	a, 1
+	ld	(_running), a
+	ld	hl, _levels+18
+	push	hl
+	call	_apply_theme
+	pop	hl
+BB0_1:
+	call	_clock
+	ld	(ix - 3), hl
+	ld	(ix - 4), e
+	call	_kb_Scan
+	ld	hl, -720878
+	push	de
+	ld	e, (hl)
+	inc	hl
+	ld	d, (hl)
+	ld	l, e
+	ld	h, d
+	pop	de
+	ex	de, hl
+	ld	iyl, e
+	ex	de, hl
+	ld	a, iyl
+	ld	(_cur_g1), a
+	ld	hl, -720868
+	push	de
+	ld	e, (hl)
+	inc	hl
+	ld	d, (hl)
+	ld	l, e
+	ld	h, d
+	pop	de
+	ex	de, hl
+	ld	iyh, e
+	ex	de, hl
+	ld	a, iyh
+	ld	(_cur_g6), a
+	ld	hl, -720866
+	push	de
+	ld	e, (hl)
+	inc	hl
+	ld	d, (hl)
+	ld	l, e
+	ld	h, d
+	pop	de
+	ld	a, l
+	ld	(_cur_g7), a
+	ld	bc, (_state)
+	push	bc
+	pop	hl
+	ld	de, 5
+	or	a, a
+	sbc	hl, de
+	jp	nc, BB0_113
+	push	af
+	ld	a, iyh
+	ld	(ix - 7), a
+	pop	af
+	ld	iyh, a
+	push	af
+	ld	a, iyl
+	ld	(ix - 10), a
+	pop	af
+	ld	hl, JTI0_0
+	add	hl, bc
+	add	hl, bc
+	add	hl, bc
+	ld	hl, (hl)
+	jp	(hl)
+BB0_3:
+	ld	a, (_prev_g7)
+	cpl
+	and	a, iyh
+	ld	d, a
+	ld	a, (_prev_g6)
+	cpl
+	and	a, (ix - 7)
+	ld	(ix - 13), a
+	ld	a, (_prev_g1)
+	cpl
+	ld	(ix - 16), a
+	ld	a, d
+	and	a, 1
+	ld	hl, (_menu_cursor)
+	ld	(ix - 7), hl
+	ld	bc, 2
+	or	a, a
+	sbc	hl, bc
+	call	pe, __setflag
+	ld	iyl, -1
+	ex	de, hl
+	ld	e, iyl
+	ex	de, hl
+	jp	m, BB0_5
+	ld	l, 0
+BB0_5:
+	and	a, l
+	ld	e, a
+	ld	l, e
+	ld	bc, 1
+	call	__iand
+	push	hl
+	pop	bc
+	ld	hl, (ix - 7)
+	add	hl, bc
+	bit	3, d
+	ld	a, iyl
+	jr	nz, BB0_7
+	ld	a, 0
+BB0_7:
+	ld	(ix - 7), hl
+	ld	bc, 1
+	or	a, a
+	sbc	hl, bc
+	call	pe, __setflag
+	ex	de, hl
+	ld	e, iyl
+	ex	de, hl
+	ld	d, (ix - 10)
+	jp	p, BB0_9
+	ld	l, 0
+BB0_9:
+	and	a, l
+	ld	l, a
+	ld	c, 23
+	call	__ishl
+	push	hl
+	pop	iy
+	add	iy, iy
+	sbc	hl, hl
+	push	hl
+	pop	bc
+	ld	hl, (ix - 7)
+	add	hl, bc
+	bit	0, e
+	jr	nz, BB0_11
+	bit	0, a
+	jr	z, BB0_12
+BB0_11:
+	ld	(_menu_cursor), hl
+BB0_12:
+	ld	e, (ix - 13)
+	ld	a, e
+	and	a, 1
+	ld	c, a
+	ld	a, d
+	and	a, 32
+	and	a, (ix - 16)
+	bit	0, c
+	jp	nz, BB0_53
+	or	a, a
+	jp	nz, BB0_53
+	bit	6, e
+	jp	nz, BB0_66
+	or	a, a
+	sbc	hl, hl
+	push	hl
+	call	_gfx_FillScreen
+	pop	hl
+	ld	hl, 3
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 3
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 35
+	push	hl
+	ld	hl, 112
+	push	hl
+	ld	hl, _.str
+	push	hl
+	call	_gfx_PrintStringXY
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 4
+	push	hl
+	call	_gfx_SetColor
+	pop	hl
+	ld	hl, 160
+	push	hl
+	ld	hl, 67
+	push	hl
+	ld	hl, 80
+	push	hl
+	call	_gfx_HorizLine_NoClip
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 2
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 132
+	push	hl
+	ld	hl, _.str.1
+	push	hl
+	ld	hl, 85
+	push	hl
+	or	a, a
+	sbc	hl, hl
+	push	hl
+	call	_draw_menu_item
+	pop	hl
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 112
+	push	hl
+	ld	hl, _.str.2
+	push	hl
+	ld	hl, 117
+	push	hl
+	ld	hl, 1
+	push	hl
+	call	_draw_menu_item
+	pop	hl
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 120
+	push	hl
+	ld	hl, _.str.3
+	push	hl
+	ld	hl, 149
+	push	hl
+	ld	hl, 2
+	push	hl
+	call	_draw_menu_item
+	pop	hl
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 1
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+BB0_16:
+	ld	hl, 4
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 222
+	push	hl
+	ld	hl, 12
+	push	hl
+	ld	hl, _.str.4
+	jp	BB0_112
+BB0_17:
+	ld	hl, (_transition_timer)
+	push	hl
+	pop	de
+	dec	de
+	ld	(_transition_timer), de
+	ld	a, (ix - 7)
+	and	a, 1
+	ld	de, 2
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	m, BB0_49
+	bit	0, a
+	jp	nz, BB0_49
+	bit	5, (ix - 10)
+	jp	nz, BB0_49
+	or	a, a
+	sbc	hl, hl
+	push	hl
+	call	_gfx_FillScreen
+	pop	hl
+	ld	hl, 3
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 6
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	a, (_game_over_win)
+	ld	hl, 50
+	bit	0, a
+	jp	z, BB0_97
+	push	hl
+	ld	hl, 64
+	push	hl
+	ld	hl, _.str.20
+	push	hl
+	call	_gfx_PrintStringXY
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 2
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 5
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 100
+	push	hl
+	ld	hl, 80
+	push	hl
+	ld	hl, _.str.21
+	push	hl
+	call	_gfx_PrintStringXY
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 130
+	push	hl
+	ld	hl, 88
+	push	hl
+	ld	hl, _.str.22
+	push	hl
+	call	_gfx_PrintStringXY
+	pop	hl
+	jp	BB0_111
+BB0_22:
+	ld	a, (_prev_g7)
+	cpl
+	and	a, iyh
+	ld	d, a
+	ld	a, (_prev_g6)
+	cpl
+	ld	(ix - 16), a
+	ld	a, (_prev_g1)
+	cpl
+	ld	(ix - 19), a
+	ld	a, d
+	and	a, 1
+	ld	hl, (_level_select_cursor)
+	ld	(ix - 13), hl
+	ld	bc, 4
+	or	a, a
+	sbc	hl, bc
+	call	pe, __setflag
+	ld	iyl, -1
+	ex	de, hl
+	ld	e, iyl
+	ex	de, hl
+	jp	m, BB0_24
+	ld	l, 0
+BB0_24:
+	and	a, l
+	ld	e, a
+	ld	l, e
+	ld	bc, 1
+	call	__iand
+	push	hl
+	pop	bc
+	ld	hl, (ix - 13)
+	add	hl, bc
+	bit	3, d
+	ld	a, iyl
+	jr	nz, BB0_26
+	ld	a, 0
+BB0_26:
+	ld	(ix - 13), hl
+	ld	bc, 1
+	or	a, a
+	sbc	hl, bc
+	call	pe, __setflag
+	ex	de, hl
+	ld	e, iyl
+	ex	de, hl
+	jp	p, BB0_28
+	ld	l, 0
+BB0_28:
+	and	a, l
+	ld	l, a
+	ld	c, 23
+	call	__ishl
+	push	hl
+	pop	iy
+	add	iy, iy
+	sbc	hl, hl
+	push	hl
+	pop	bc
+	ld	hl, (ix - 13)
+	add	hl, bc
+	bit	0, e
+	jr	nz, BB0_30
+	bit	0, a
+	jr	z, BB0_31
+BB0_30:
+	ld	(_level_select_cursor), hl
+BB0_31:
+	ld	(ix - 13), hl
+	ld	c, 5
+	call	__ishl
+	push	hl
+	pop	de
+	ld	iy, _levels
+	add	iy, de
+	pea	iy + 18
+	call	_apply_theme
+	pop	hl
+	ld	l, (ix - 7)
+	ld	a, l
+	and	a, 1
+	and	a, (ix - 16)
+	bit	0, a
+	jp	nz, BB0_55
+	ld	a, (ix - 10)
+	and	a, 32
+	and	a, (ix - 19)
+	or	a, a
+	jp	nz, BB0_55
+	bit	6, l
+	jp	nz, BB0_49
+	or	a, a
+	sbc	hl, hl
+	push	hl
+	call	_gfx_FillScreen
+	pop	hl
+	ld	hl, 2
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 5
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 15
+	push	hl
+	ld	hl, 68
+	push	hl
+	ld	hl, _.str.5
+	push	hl
+	call	_gfx_PrintStringXY
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 1
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, _level_names
+	ld	(ix - 7), hl
+	ld	hl, 50
+	ld	(ix - 10), hl
+	ld	a, 48
+	ld	iyl, a
+	ld	bc, 0
+BB0_35:
+	push	bc
+	pop	hl
+	ld	de, 5
+	or	a, a
+	sbc	hl, de
+	jp	z, BB0_16
+	ld	(ix - 13), iy
+	ld	de, (_level_select_cursor)
+	push	bc
+	pop	hl
+	or	a, a
+	sbc	hl, de
+	ld	hl, 5
+	ld	(ix - 16), bc
+	jr	nz, BB0_38
+	ld	hl, 6
+	push	hl
+	call	_gfx_SetColor
+	pop	hl
+	ld	hl, 18
+	push	hl
+	ld	hl, 240
+	push	hl
+	ld	hl, (ix - 13)
+	push	hl
+	ld	hl, 40
+	push	hl
+	call	_gfx_FillRectangle_NoClip
+	pop	hl
+	pop	hl
+	pop	hl
+	pop	hl
+	or	a, a
+	sbc	hl, hl
+BB0_38:
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, (ix - 10)
+	push	hl
+	ld	hl, 50
+	push	hl
+	call	_gfx_SetTextXY
+	pop	hl
+	pop	hl
+	ld	hl, _.str.6
+	push	hl
+	call	_gfx_PrintString
+	pop	hl
+	ld	de, (ix - 16)
+	push	de
+	pop	hl
+	inc	hl
+	ld	(ix - 19), hl
+	inc	de
+	ld	hl, 1
+	push	hl
+	push	de
+	call	_gfx_PrintInt
+	pop	hl
+	pop	hl
+	ld	hl, _.str.7
+	push	hl
+	call	_gfx_PrintString
+	pop	hl
+	ld	hl, (ix - 7)
+	ld	de, (hl)
+	push	de
+	call	_gfx_PrintString
+	pop	hl
+	ld	hl, (ix - 13)
+	ld	a, l
+	add	a, 25
+	ld	c, a
+	ld	de, 25
+	ld	hl, (ix - 10)
+	add	hl, de
+	ld	(ix - 10), hl
+	ld	iy, (ix - 7)
+	lea	iy, iy + 3
+	ld	(ix - 7), iy
+	push	bc
+	pop	iy
+	ld	bc, (ix - 19)
+	jp	BB0_35
+BB0_39:
+	ld	e, (ix - 7)
+	bit	6, e
+	jr	nz, BB0_49
+	ld	a, (_prev_g6)
+	cpl
+	ld	l, a
+	ld	a, e
+	and	a, 1
+	and	a, l
+	ld	hl, (_paused)
+	bit	0, a
+	jr	nz, BB0_42
+	ld	a, (_prev_g1)
+	cpl
+	ld	c, a
+	ld	a, (ix - 10)
+	and	a, 32
+	and	a, c
+	or	a, a
+	jr	z, BB0_45
+BB0_42:
+	add	hl, bc
+	or	a, a
+	sbc	hl, bc
+	ld	hl, 1
+	jr	z, BB0_44
+	ld	hl, 0
+BB0_44:
+	ld	(_paused), hl
+BB0_45:
+	add	hl, bc
+	or	a, a
+	sbc	hl, bc
+	jp	nz, BB0_61
+	ld	hl, (_ball_dx)
+	ld	bc, (_ball_x)
+	ld	(ix - 13), hl
+	ld	de, 0
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	ld	(ix - 7), bc
+	jp	p, BB0_62
+	push	bc
+	pop	hl
+	ld	de, 160
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	p, BB0_62
+	ld	hl, (_ball_y)
+	ld	bc, -16
+	add	hl, bc
+	ld	de, (_active_cfg+12)
+	ld	(ix - 16), de
+	jp	BB0_63
+BB0_49:
+	or	a, a
+	sbc	hl, hl
+	ld	(_state), hl
+	ld	hl, _levels+18
+	push	hl
+	call	_apply_theme
+	pop	hl
+	jp	BB0_113
+BB0_50:
+	ld	a, (_prev_g6)
+	cpl
+	ld	l, a
+	ld	a, (ix - 7)
+	and	a, 1
+	and	a, l
+	bit	0, a
+	jp	nz, BB0_56
+	ld	a, (_prev_g1)
+	cpl
+	and	a, 32
+	and	a, (ix - 10)
+	or	a, a
+	jp	nz, BB0_56
+	or	a, a
+	sbc	hl, hl
+	push	hl
+	call	_gfx_FillScreen
+	pop	hl
+	ld	hl, 2
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 6
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 70
+	push	hl
+	ld	hl, 44
+	push	hl
+	call	_gfx_SetTextXY
+	pop	hl
+	pop	hl
+	ld	hl, _.str.6
+	push	hl
+	call	_gfx_PrintString
+	pop	hl
+	ld	hl, (_current_level)
+	inc	hl
+	ld	de, 1
+	push	de
+	push	hl
+	call	_gfx_PrintInt
+	pop	hl
+	pop	hl
+	ld	hl, _.str.17
+	push	hl
+	call	_gfx_PrintString
+	pop	hl
+	ld	hl, 1
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 5
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 110
+	push	hl
+	ld	hl, 108
+	push	hl
+	call	_gfx_SetTextXY
+	pop	hl
+	pop	hl
+	ld	hl, _.str.18
+	push	hl
+	call	_gfx_PrintString
+	pop	hl
+	ld	hl, (_score1)
+	ld	de, 1
+	push	de
+	push	hl
+	call	_gfx_PrintInt
+	pop	hl
+	pop	hl
+	ld	hl, _.str.7
+	push	hl
+	call	_gfx_PrintString
+	pop	hl
+	ld	hl, (_score2)
+	ld	de, 1
+	push	de
+	push	hl
+	call	_gfx_PrintInt
+	pop	hl
+	pop	hl
+	ld	hl, 4
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 150
+	push	hl
+	ld	hl, 72
+	push	hl
+	ld	hl, _.str.19
+	jp	BB0_112
+BB0_53:
+	add	hl, bc
+	or	a, a
+	sbc	hl, bc
+	jr	nz, BB0_59
+	or	a, a
+	sbc	hl, hl
+	jr	BB0_57
+BB0_55:
+	ld	hl, (ix - 13)
+	jr	BB0_57
+BB0_56:
+	ld	hl, (_current_level)
+	inc	hl
+BB0_57:
+	ld	(_current_level), hl
+	call	_start_level
+BB0_58:
+	ld	hl, 2
+	ld	(_state), hl
+	jp	BB0_113
+BB0_59:
+	ld	de, 1
+	or	a, a
+	sbc	hl, de
+	jp	nz, BB0_65
+	ld	a, 1
+	ld	(_infinite_mode), a
+	or	a, a
+	sbc	hl, hl
+	ld	(_current_level), hl
+	ld	(_score1), hl
+	ld	(_score2), hl
+	ld	bc, 3
+	ld	(_lives), bc
+	ld	(_paused), hl
+	ld	(_last_scorer), de
+	call	_compute_infinite_cfg
+	ld	hl, 104
+	ld	(_paddle1_y), hl
+	ld	hl, (_active_cfg+6)
+	ld	bc, -2
+	call	__idivs
+	ld	de, 120
+	add	hl, de
+	ld	(_paddle2_y), hl
+	call	_reset_ball
+	jr	BB0_58
+BB0_61:
+	call	_draw_game
+	ld	hl, 2
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 5
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 110
+	push	hl
+	ld	hl, 104
+	push	hl
+	ld	hl, _.str.13
+	push	hl
+	call	_gfx_PrintStringXY
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 1
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 4
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 140
+	push	hl
+	ld	hl, 100
+	push	hl
+	ld	hl, _.str.14
+	jp	BB0_112
+BB0_62:
+	ld	hl, (_active_cfg+12)
+	inc	hl
+	ld	bc, 2
+	call	__idivs
+	ld	(ix - 16), hl
+	ld	hl, 104
+BB0_63:
+	ld	bc, (_paddle1_y)
+	ld	(ix - 22), hl
+	ld	(ix - 10), bc
+	or	a, a
+	sbc	hl, bc
+	push	hl
+	pop	de
+	ld	bc, (ix - 16)
+	push	bc
+	pop	hl
+	ld	(ix - 19), de
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	p, BB0_67
+	ld	hl, (ix - 10)
+	add	hl, bc
+	push	hl
+	pop	bc
+	jr	BB0_69
+BB0_65:
+	or	a, a
+	sbc	hl, hl
+	ld	(_level_select_cursor), hl
+	ld	(_state), de
+	jp	BB0_113
+BB0_66:
+	xor	a, a
+	ld	(_running), a
+	jp	BB0_113
+BB0_67:
+	push	bc
+	pop	hl
+	call	__ineg
+	ld	(ix - 25), hl
+	ld	hl, (ix - 10)
+	or	a, a
+	sbc	hl, bc
+	push	hl
+	pop	de
+	ld	hl, (ix - 19)
+	ld	bc, (ix - 25)
+	or	a, a
+	sbc	hl, bc
+	push	de
+	pop	bc
+	call	pe, __setflag
+	jp	m, BB0_69
+	ld	bc, (ix - 22)
+BB0_69:
+	ld	(_paddle1_y), bc
+	push	bc
+	pop	hl
+	ld	de, 0
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	ld	hl, 0
+	jp	m, BB0_71
+	push	bc
+	pop	hl
+	ld	de, 209
+	or	a, a
+	sbc	hl, de
+	ld	hl, 208
+	jr	c, BB0_72
+BB0_71:
+	ld	(_paddle1_y), hl
+	push	hl
+	pop	bc
+BB0_72:
+	ld	(ix - 10), bc
+	ld	a, iyh
+	bit	3, a
+	jr	z, BB0_74
+	ld	bc, (_active_cfg+9)
+	ld	hl, (_paddle2_y)
+	or	a, a
+	sbc	hl, bc
+	ld	(_paddle2_y), hl
+BB0_74:
+	and	a, 1
+	bit	0, a
+	ld	iy, (ix - 7)
+	jr	nz, BB0_76
+	ld	bc, (_paddle2_y)
+	jr	BB0_77
+BB0_76:
+	ld	de, (_active_cfg+9)
+	ld	hl, (_paddle2_y)
+	add	hl, de
+	ld	(_paddle2_y), hl
+	push	hl
+	pop	bc
+BB0_77:
+	push	bc
+	pop	hl
+	ld	de, 0
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	p, BB0_79
+	ld	bc, 0
+	ld	(_paddle2_y), bc
+BB0_79:
+	ld	de, (_active_cfg+6)
+	ld	hl, 240
+	ld	(ix - 22), de
+	or	a, a
+	sbc	hl, de
+	push	hl
+	pop	de
+	or	a, a
+	sbc	hl, bc
+	call	pe, __setflag
+	jp	p, BB0_81
+	ld	(_paddle2_y), de
+	push	de
+	pop	bc
+BB0_81:
+	ld	(ix - 19), bc
+	ld	de, (ix - 13)
+	add	iy, de
+	ld	(ix - 7), iy
+	ld	(_ball_x), iy
+	ld	bc, (_ball_dy)
+	ld	iy, (_ball_y)
+	add	iy, bc
+	ld	(_ball_y), iy
+	lea	hl, iy
+	ld	de, 1
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	dec	de
+	jp	m, BB0_83
+	lea	hl, iy
+	ld	de, 236
+	or	a, a
+	sbc	hl, de
+	ld	(ix - 16), iy
+	jr	c, BB0_84
+BB0_83:
+	ld	(_ball_y), de
+	push	bc
+	pop	hl
+	call	__ineg
+	ld	(_ball_dy), hl
+	ld	(ix - 16), de
+BB0_84:
+	ld	iy, (ix - 7)
+	lea	hl, iy
+	ld	de, 13
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	p, BB0_89
+	ld	bc, (ix - 16)
+	push	bc
+	pop	hl
+	ld	de, 4
+	add	hl, de
+	ld	iy, (ix - 10)
+	lea	de, iy
+	or	a, a
+	sbc	hl, de
+	jp	c, BB0_95
+	ld	de, 32
+	add	iy, de
+	lea	hl, iy
+	or	a, a
+	sbc	hl, bc
+	jp	c, BB0_95
+	ld	hl, (ix - 13)
+	ld	de, 0
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	p, BB0_95
+	ld	hl, 12
+	ld	(_ball_x), hl
+	ld	hl, (_ball_speed_fp)
+	ld	bc, 105
+	call	__imulu
+	ld	bc, 100
+	call	__idivs
+	ld	(_ball_speed_fp), hl
+	ld	c, 8
+	call	__ishrs
+	jr	BB0_94
+BB0_89:
+	lea	hl, iy
+	ld	de, 304
+	or	a, a
+	sbc	hl, de
+	ld	a, 0
+	jp	c, BB0_103
+	ld	bc, (ix - 16)
+	push	bc
+	pop	hl
+	ld	de, 4
+	add	hl, de
+	ld	de, (ix - 19)
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	m, BB0_99
+	ld	de, (ix - 22)
+	ld	hl, (ix - 19)
+	add	hl, de
+	or	a, a
+	sbc	hl, bc
+	call	pe, __setflag
+	jp	m, BB0_99
+	ld	hl, (ix - 13)
+	ld	de, 1
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	ld	bc, 1
+	jp	m, BB0_100
+	ld	hl, 304
+	ld	(_ball_x), hl
+	ld	hl, (_ball_speed_fp)
+	ld	bc, 105
+	call	__imulu
+	ld	bc, 100
+	call	__idivs
+	ld	(_ball_speed_fp), hl
+	ld	c, 8
+	call	__ishrs
+	call	__ineg
+BB0_94:
+	ld	(_ball_dx), hl
+	jp	BB0_103
+BB0_95:
+	ld	hl, (ix - 7)
+	ld	de, 0
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	p, BB0_103
+	ld	hl, (_score2)
+	inc	hl
+	ld	(_score2), hl
+	ld	hl, 2
+	ld	(_last_scorer), hl
+	ld	a, (_infinite_mode)
+	bit	0, a
+	call	nz, _compute_infinite_cfg
+	call	_reset_ball
+	ld	iy, (_ball_x)
+	ld	bc, 1
+	xor	a, a
+	jr	BB0_100
+BB0_97:
+	push	hl
+	ld	hl, 40
+	push	hl
+	ld	hl, _.str.23
+	push	hl
+	call	_gfx_PrintStringXY
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 2
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 5
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	a, (_infinite_mode)
+	ld	hl, 100
+	bit	0, a
+	jp	z, BB0_109
+	push	hl
+	ld	hl, 80
+	push	hl
+	call	_gfx_SetTextXY
+	pop	hl
+	pop	hl
+	ld	hl, _.str.18
+	jp	BB0_110
+BB0_99:
+	ld	bc, 1
+BB0_100:
+	lea	hl, iy
+	ld	de, 321
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	m, BB0_103
+	ld	hl, (_score1)
+	inc	hl
+	ld	(_score1), hl
+	ld	(_last_scorer), bc
+	ld	hl, (_lives)
+	push	hl
+	pop	de
+	dec	de
+	ld	(_lives), de
+	ld	de, 2
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	m, BB0_107
+	call	_reset_ball
+BB0_103:
+	ld	a, (_infinite_mode)
+	bit	0, a
+	jr	nz, BB0_105
+	ld	hl, (_score2)
+	ld	de, (_active_cfg+15)
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	p, BB0_106
+BB0_105:
+	ld	hl, (_state)
+	ld	de, 2
+	or	a, a
+	sbc	hl, de
+	call	z, _draw_game
+	jp	BB0_113
+BB0_106:
+	ld	hl, (_current_level)
+	ld	de, 4
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	ld	a, 1
+	ld	hl, 3
+	jp	m, BB0_108
+BB0_107:
+	and	a, 1
+	ld	(_game_over_win), a
+	ld	hl, 4
+BB0_108:
+	ld	(_state), hl
+	ld	hl, 90
+	ld	(_transition_timer), hl
+	jp	BB0_113
+BB0_109:
+	push	hl
+	ld	hl, 72
+	push	hl
+	call	_gfx_SetTextXY
+	pop	hl
+	pop	hl
+	ld	hl, _.str.6
+	push	hl
+	call	_gfx_PrintString
+	pop	hl
+	ld	hl, (_current_level)
+	inc	hl
+	ld	de, 1
+	push	de
+	push	hl
+	call	_gfx_PrintInt
+	pop	hl
+	pop	hl
+	ld	hl, 130
+	push	hl
+	ld	hl, 80
+	push	hl
+	call	_gfx_SetTextXY
+	pop	hl
+	pop	hl
+	ld	hl, _.str.18
+	push	hl
+	call	_gfx_PrintString
+	pop	hl
+	ld	hl, (_score1)
+	ld	de, 1
+	push	de
+	push	hl
+	call	_gfx_PrintInt
+	pop	hl
+	pop	hl
+	ld	hl, _.str.7
+BB0_110:
+	push	hl
+	call	_gfx_PrintString
+	pop	hl
+	ld	hl, (_score2)
+	ld	de, 1
+	push	de
+	push	hl
+	call	_gfx_PrintInt
+BB0_111:
+	pop	hl
+	pop	hl
+	ld	hl, 1
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 4
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 200
+	push	hl
+	ld	hl, 72
+	push	hl
+	ld	hl, _.str.24
+BB0_112:
+	push	hl
+	call	_gfx_PrintStringXY
+	pop	hl
+	pop	hl
+	pop	hl
+	call	_gfx_SwapDraw
+BB0_113:
+	ld	a, (_cur_g1)
+	ld	(_prev_g1), a
+	ld	a, (_cur_g6)
+	ld	(_prev_g6), a
+	ld	a, (_cur_g7)
+	ld	(_prev_g7), a
+BB0_114:
+	call	_clock
+	ld	bc, (ix - 3)
+	ld	a, (ix - 4)
+	call	__lsub
+	ld	bc, 1092
+	xor	a, a
+	call	__lcmpu
+	jr	c, BB0_114
+	ld	a, (_running)
+	bit	0, a
+	jp	nz, BB0_1
+	call	_gfx_End
+	or	a, a
+	sbc	hl, hl
+	ld	sp, ix
+	pop	ix
+	ret
+	section	.text,"ax",@progbits
+	section	.rodata,"a",@progbits
+	private	JTI0_0
+JTI0_0:
+	dl	BB0_3
+	dl	BB0_22
+	dl	BB0_39
+	dl	BB0_50
+	dl	BB0_17
+
+	section	.text,"ax",@progbits
+	private	_apply_theme
+_apply_theme:
+	call	__frameset0
+	ld	iy, (ix + 6)
+	ld	hl, -1900032
+	ld	de, -1900030
+	ld	bc, (iy)
+	ld	(hl), c
+	inc	hl
+	ld	(hl), b
+	ld	hl, (iy + 2)
+	lea	bc, iy
+	push	de
+	pop	iy
+	ld	(iy), l
+	ld	(iy + 1), h
+	push	bc
+	pop	iy
+	ld	hl, (iy + 4)
+	lea	de, iy
+	ld	iy, -1900028
+	ld	(iy), l
+	ld	(iy + 1), h
+	push	de
+	pop	iy
+	ld	hl, (iy + 6)
+	ld	iy, -1900026
+	ld	(iy), l
+	ld	(iy + 1), h
+	push	de
+	pop	iy
+	ld	hl, (iy + 8)
+	ld	iy, -1900024
+	ld	(iy), l
+	ld	(iy + 1), h
+	push	de
+	pop	iy
+	ld	hl, (iy + 10)
+	ld	iy, -1900022
+	ld	(iy), l
+	ld	(iy + 1), h
+	push	de
+	pop	iy
+	ld	hl, (iy + 12)
+	ld	iy, -1900020
+	ld	(iy), l
+	ld	(iy + 1), h
+	ld.sis	hl, 31749
+	ld	iy, -1900018
+	ld	(iy), l
+	ld	(iy + 1), h
+	pop	ix
+	ret
+	section	.text,"ax",@progbits
+
+	section	.text,"ax",@progbits
+	private	_start_level
+_start_level:
+	ld	iy, _levels
+	ld	de, _active_cfg
+	ld	hl, (_current_level)
+	ld	c, 5
+	call	__ishl
+	push	hl
+	pop	bc
+	add	iy, bc
+	lea	hl, iy
+	ld	bc, 32
+	ldir
+	ld	hl, _active_cfg+18
+	push	hl
+	call	_apply_theme
+	pop	hl
+	ld	hl, 104
+	ld	(_paddle1_y), hl
+	ld	hl, (_active_cfg+6)
+	ld	bc, -2
+	call	__idivs
+	ld	de, 120
+	add	hl, de
+	ld	(_paddle2_y), hl
+	or	a, a
+	sbc	hl, hl
+	ld	(_score1), hl
+	ld	(_score2), hl
+	ld	de, 3
+	ld	(_lives), de
+	xor	a, a
+	ld	(_infinite_mode), a
+	ld	(_paused), hl
+	inc	hl
+	ld	(_last_scorer), hl
+	jp	_reset_ball
+	section	.text,"ax",@progbits
+
+	section	.text,"ax",@progbits
+	private	_compute_infinite_cfg
+_compute_infinite_cfg:
+	ld	hl, -3
+	call	__frameset
+	ld	iy, 30
+	ld	de, (_score2)
+	ld	bc, 30
+	push	de
+	pop	hl
+	or	a, a
+	sbc	hl, bc
+	call	pe, __setflag
+	jp	m, BB3_2
+	lea	de, iy
+BB3_2:
+	ld	c, 2
+	push	de
+	pop	hl
+	call	__ishl
+	lea	bc, iy
+	call	__idivs
+	push	hl
+	pop	iy
+	ld	bc, 4
+	add	hl, bc
+	ld	(_active_cfg), hl
+	push	de
+	pop	hl
+	inc	bc
+	call	__idivs
+	ld	bc, 2
+	add	hl, bc
+	ld	(_active_cfg+3), hl
+	ex	de, hl
+	ld	bc, -20
+	call	__imulu
+	ld	bc, 30
+	call	__idivs
+	ld	de, 40
+	add	hl, de
+	ld	(_active_cfg+6), hl
+	lea	hl, iy
+	ld	de, 6
+	add	hl, de
+	ld	(_active_cfg+9), hl
+	ld	de, 2
+	add	iy, de
+	ld	(_active_cfg+12), iy
+	ld	hl, 9999
+	ld	(_active_cfg+15), hl
+	call	_rand
+	ld	bc, 30
+	call	__irems
+	ld	c, 7
+	call	__ishl
+	ld	de, 31744
+	push	de
+	pop	bc
+	call	__iand
+	ld	(ix - 3), hl
+	call	_rand
+	ld	bc, 30
+	call	__irems
+	ld	c, 2
+	call	__ishl
+	ld	de, 992
+	push	de
+	pop	bc
+	call	__iand
+	ld	de, (ix - 3)
+	add	hl, de
+	ld	(ix - 3), hl
+	call	_rand
+	ld	bc, 30
+	call	__irems
+	ld	c, 3
+	call	__ishru
+	ld	bc, 31
+	call	__iand
+	push	hl
+	pop	de
+	ld	iy, (ix - 3)
+	add	iy, de
+	ld	hl, _active_cfg+18
+	push	de
+	ld	e, iyl
+	ld	d, iyh
+	ld	(hl), e
+	inc	hl
+	ld	(hl), d
+	pop	de
+	call	_rand_bright_color
+	ld	iy, _active_cfg+20
+	ld	(iy), l
+	ld	(iy + 1), h
+	call	_rand_bright_color
+	ld	iy, _active_cfg+22
+	ld	(iy), l
+	ld	(iy + 1), h
+	call	_rand_bright_color
+	ld	iy, _active_cfg+24
+	ld	(iy), l
+	ld	(iy + 1), h
+	call	_rand
+	ld	bc, 40
+	call	__irems
+	ld	c, 7
+	call	__ishl
+	ld	de, 5120
+	add	hl, de
+	ld	bc, 31744
+	call	__iand
+	ld	(ix - 3), hl
+	call	_rand
+	ld	bc, 40
+	call	__irems
+	ld	c, 2
+	call	__ishl
+	ld	de, 160
+	add	hl, de
+	ld	bc, 992
+	call	__iand
+	ld	de, (ix - 3)
+	add	hl, de
+	ld	(ix - 3), hl
+	call	_rand
+	ld	bc, 40
+	call	__irems
+	ld	de, 40
+	add	hl, de
+	ld	c, 3
+	call	__ishru
+	push	hl
+	pop	bc
+	ld	hl, (ix - 3)
+	call	__sor
+	ld	iy, _active_cfg+26
+	ld	(iy), l
+	ld	(iy + 1), h
+	call	_rand
+	ld	de, 56
+	push	de
+	pop	bc
+	call	__irems
+	ld	c, 7
+	call	__ishl
+	ld	de, 25600
+	add	hl, de
+	ld	bc, 31744
+	call	__iand
+	ld	(ix - 3), hl
+	call	_rand
+	ld	bc, 56
+	call	__irems
+	ld	c, 2
+	call	__ishl
+	ld	de, 800
+	add	hl, de
+	ld	bc, 992
+	call	__iand
+	ld	de, (ix - 3)
+	add	hl, de
+	ld	(ix - 3), hl
+	call	_rand
+	ld	bc, 56
+	call	__irems
+	ld	de, 200
+	add	hl, de
+	ld	c, 3
+	call	__ishru
+	push	hl
+	pop	bc
+	ld	hl, (ix - 3)
+	call	__sor
+	ld	iy, _active_cfg+28
+	ld	(iy), l
+	ld	(iy + 1), h
+	call	_rand_bright_color
+	ld	iy, _active_cfg+30
+	ld	(iy), l
+	ld	(iy + 1), h
+	ld	hl, _active_cfg+18
+	push	hl
+	call	_apply_theme
+	ld	sp, ix
+	pop	ix
+	ret
+	section	.text,"ax",@progbits
+
+	section	.text,"ax",@progbits
+	private	_reset_ball
+_reset_ball:
+	ld	de, 512
+	ld	hl, (_active_cfg)
+	ld	c, 8
+	call	__ishl
+	add	hl, de
+	ld	(_ball_speed_fp), hl
+	call	_rand
+	ld	bc, (_active_cfg+3)
+	call	__irems
+	inc	hl
+	ld	(_ball_dy), hl
+	call	_rand
+	ld	bc, 1
+	call	__iand
+	bit	0, l
+	jr	z, BB4_2
+	ld	hl, (_ball_dy)
+	call	__ineg
+	ld	(_ball_dy), hl
+BB4_2:
+	ld	bc, 2
+	ld	hl, (_last_scorer)
+	ld	de, 1
+	or	a, a
+	sbc	hl, de
+	jr	nz, BB4_4
+	ld	hl, 12
+	ld	de, 14
+	ld	(_ball_x), hl
+	ld	hl, (_paddle1_y)
+	add	hl, de
+	ld	(_ball_y), hl
+	ld	hl, (_active_cfg)
+	add	hl, bc
+	jr	BB4_5
+BB4_4:
+	ld	hl, 304
+	ld	de, -2
+	ld	(_ball_x), hl
+	ld	iy, (_paddle2_y)
+	ld	hl, (_active_cfg+6)
+	call	__idivs
+	push	hl
+	pop	bc
+	add	iy, de
+	add	iy, bc
+	ld	(_ball_y), iy
+	ld	bc, (_active_cfg)
+	ex	de, hl
+	or	a, a
+	sbc	hl, bc
+BB4_5:
+	ld	(_ball_dx), hl
+	ret
+	section	.text,"ax",@progbits
+
+	section	.text,"ax",@progbits
+	private	_draw_menu_item
+_draw_menu_item:
+	ld	hl, -15
+	call	__frameset
+	ld	de, (ix + 6)
+	ld	hl, (ix + 9)
+	ld	(ix - 3), hl
+	ld	bc, (ix + 12)
+	ld	hl, (ix + 15)
+	ld	(ix - 6), hl
+	ld	hl, (_menu_cursor)
+	or	a, a
+	sbc	hl, de
+	ld	(ix - 9), bc
+	jr	nz, BB5_2
+	push	bc
+	call	_strlen
+	pop	de
+	ld	c, 4
+	call	__ishl
+	ld	de, 12
+	add	hl, de
+	ld	(ix - 12), hl
+	ld	hl, (ix - 6)
+	ld	de, -6
+	add	hl, de
+	ld	(ix - 15), hl
+	ld	hl, 6
+	push	hl
+	call	_gfx_SetColor
+	pop	hl
+	ld	hl, (ix - 3)
+	ld	a, l
+	add	a, -2
+	ld	l, a
+	ld	de, 22
+	push	de
+	ld	de, (ix - 12)
+	push	de
+	push	hl
+	ld	hl, (ix - 15)
+	push	hl
+	call	_gfx_FillRectangle_NoClip
+	ld	de, 0
+	pop	hl
+	pop	hl
+	pop	hl
+	pop	hl
+	jr	BB5_3
+BB5_2:
+	ld	de, 5
+BB5_3:
+	push	de
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, (ix - 9)
+	ld	(ix + 6), hl
+	ld	hl, (ix - 6)
+	ld	(ix + 9), hl
+	ld	hl, (ix - 3)
+	ld	(ix + 12), hl
+	ld	sp, ix
+	pop	ix
+	jp	_gfx_PrintStringXY
+	section	.text,"ax",@progbits
+
+	section	.text,"ax",@progbits
+	private	_draw_game
+_draw_game:
+	ld	hl, -16
+	call	__frameset
+	ld	l, 0
+	ld	(ix - 3), hl
+	ld	hl, 308
+	ld	(ix - 6), hl
+	or	a, a
+	sbc	hl, hl
+	push	hl
+	call	_gfx_FillScreen
+	pop	hl
+	ld	hl, 4
+	push	hl
+	call	_gfx_SetColor
+	pop	hl
+	ld	de, 240
+	ld	iy, 0
+BB6_1:
+	lea	hl, iy
+	or	a, a
+	sbc	hl, de
+	jr	nc, BB6_3
+	ld	hl, 4
+	push	hl
+	ld	hl, 2
+	push	hl
+	ld	hl, (ix - 3)
+	push	hl
+	ld	hl, 159
+	push	hl
+	ld	(ix - 9), iy
+	call	_gfx_FillRectangle_NoClip
+	ld	iy, (ix - 9)
+	pop	hl
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	de, 8
+	add	iy, de
+	ld	de, 240
+	ld	hl, (ix - 3)
+	ld	a, l
+	add	a, 8
+	ld	l, a
+	ld	(ix - 3), hl
+	jr	BB6_1
+BB6_3:
+	ld	hl, 1
+	push	hl
+	call	_gfx_SetColor
+	pop	hl
+	ld	a, (_paddle1_y)
+	ld	l, a
+	ld	de, 32
+	push	de
+	ld	de, 4
+	push	de
+	push	hl
+	ld	hl, 8
+	push	hl
+	call	_gfx_FillRectangle_NoClip
+	pop	hl
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 2
+	push	hl
+	call	_gfx_SetColor
+	pop	hl
+	ld	a, (_paddle2_y)
+	ld	l, a
+	ld	a, (_active_cfg+6)
+	ld	e, a
+	push	de
+	ld	de, 4
+	push	de
+	push	hl
+	ld	hl, 308
+	push	hl
+	call	_gfx_FillRectangle_NoClip
+	pop	hl
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 3
+	push	hl
+	call	_gfx_SetColor
+	pop	hl
+	ld	hl, (_ball_x)
+	ld	a, (_ball_y)
+	ld	e, a
+	ld	bc, 4
+	push	bc
+	push	bc
+	push	de
+	push	hl
+	call	_gfx_FillRectangle_NoClip
+	pop	hl
+	pop	hl
+	pop	hl
+	pop	hl
+	ld	hl, 2
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 5
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 5
+	push	hl
+	ld	hl, 120
+	push	hl
+	call	_gfx_SetTextXY
+	pop	hl
+	pop	hl
+	ld	hl, (_score1)
+	ld	de, 1
+	push	de
+	push	hl
+	call	_gfx_PrintInt
+	pop	hl
+	pop	hl
+	ld	hl, 5
+	push	hl
+	ld	hl, 185
+	push	hl
+	call	_gfx_SetTextXY
+	pop	hl
+	pop	hl
+	ld	hl, (_score2)
+	ld	de, 1
+	push	de
+	push	hl
+	call	_gfx_PrintInt
+	pop	hl
+	pop	hl
+	ld	hl, 1
+	push	hl
+	push	hl
+	call	_gfx_SetTextScale
+	pop	hl
+	pop	hl
+	ld	hl, 4
+	push	hl
+	call	_gfx_SetTextFGColor
+	pop	hl
+	ld	hl, 2
+	push	hl
+	push	hl
+	call	_gfx_SetTextXY
+	pop	hl
+	pop	hl
+	ld	a, (_infinite_mode)
+	bit	0, a
+	jr	z, BB6_5
+	ld	hl, _.str.15
+	push	hl
+	call	_gfx_PrintString
+	jr	BB6_6
+BB6_5:
+	ld	hl, _.str.16
+	push	hl
+	call	_gfx_PrintString
+	pop	hl
+	ld	hl, (_current_level)
+	inc	hl
+	ld	de, 1
+	push	de
+	push	hl
+	call	_gfx_PrintInt
+	pop	hl
+BB6_6:
+	pop	hl
+	or	a, a
+	sbc	hl, hl
+	ld	(ix - 3), hl
+BB6_7:
+	ld	de, (_lives)
+	ld	hl, (ix - 3)
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	p, BB6_17
+	ld	hl, 7
+	push	hl
+	call	_gfx_SetColor
+	pop	hl
+	or	a, a
+	sbc	hl, hl
+	push	hl
+	pop	bc
+BB6_9:
+	push	bc
+	pop	hl
+	ld	de, 6
+	or	a, a
+	sbc	hl, de
+	jr	z, BB6_16
+	ld	hl, _heart_bmp
+	add	hl, bc
+	ld	a, (hl)
+	ld	(ix - 13), a
+	push	bc
+	pop	iy
+	ld	a, c
+	add	a, 3
+	ld	l, a
+	ld	(ix - 16), hl
+	or	a, a
+	sbc	hl, hl
+	push	hl
+	pop	bc
+BB6_11:
+	ld	(ix - 9), bc
+	push	bc
+	pop	hl
+	ld	de, 7
+	or	a, a
+	sbc	hl, de
+	jr	z, BB6_15
+	ld	(ix - 12), iy
+	ld	hl, 128
+	ld	bc, (ix - 9)
+	call	__ishru
+	ld	a, l
+	and	a, (ix - 13)
+	or	a, a
+	jr	z, BB6_14
+	ld	hl, (ix - 6)
+	add	hl, bc
+	ld	de, (ix - 16)
+	push	de
+	push	hl
+	call	_gfx_SetPixel
+	ld	bc, (ix - 9)
+	pop	hl
+	pop	hl
+BB6_14:
+	inc	bc
+	ld	iy, (ix - 12)
+	jr	BB6_11
+BB6_15:
+	lea	bc, iy
+	inc	bc
+	jr	BB6_9
+BB6_16:
+	ld	hl, (ix - 3)
+	inc	hl
+	ld	(ix - 3), hl
+	ld	hl, (ix - 6)
+	ld	de, -10
+	add	hl, de
+	ld	(ix - 6), hl
+	jp	BB6_7
+BB6_17:
+	ld	sp, ix
+	pop	ix
+	jp	_gfx_SwapDraw
+	section	.text,"ax",@progbits
+
+	section	.text,"ax",@progbits
+	private	_rand_bright_color
+_rand_bright_color:
+	ld	hl, -9
+	call	__frameset
+	call	_rand
+	ld	(ix - 9), hl
+	call	_rand
+	ld	(ix - 6), hl
+	call	_rand
+	ld	(ix - 3), hl
+	call	_rand
+	ld	bc, 3
+	call	__irems
+	push	hl
+	pop	iy
+	add	hl, bc
+	or	a, a
+	sbc	hl, bc
+	jr	nz, BB7_2
+	ld	hl, (ix - 9)
+	ld	bc, 63
+	call	__iand
+	ld	de, 192
+	add	hl, de
+	ld	iy, (ix - 6)
+	jr	BB7_7
+BB7_2:
+	ld	bc, 63
+	ld	de, 1
+	lea	hl, iy
+	or	a, a
+	sbc	hl, de
+	jr	nz, BB7_4
+	ld	hl, (ix - 6)
+	call	__iand
+	push	hl
+	pop	iy
+	ld	de, 192
+	add	iy, de
+	jr	BB7_6
+BB7_4:
+	ld	bc, 2
+	lea	hl, iy
+	or	a, a
+	sbc	hl, bc
+	ld	iy, (ix - 6)
+	jr	nz, BB7_6
+	ld	hl, (ix - 3)
+	ld	bc, 192
+	call	__ior
+	ld	(ix - 3), hl
+BB7_6:
+	ld	hl, (ix - 9)
+BB7_7:
+	ld	c, 7
+	call	__ishl
+	ld	bc, 31744
+	call	__iand
+	push	hl
+	pop	de
+	ld	c, 2
+	lea	hl, iy
+	call	__ishl
+	ld	bc, 992
+	call	__iand
+	push	hl
+	pop	iy
+	add	iy, de
+	ld	c, b
+	ld	hl, (ix - 3)
+	call	__ishru
+	ld	bc, 31
+	call	__iand
+	push	hl
+	pop	de
+	add	iy, de
+	ex	de, hl
+	ld	e, iyl
+	ld	d, iyh
+	ex	de, hl
+	ld	sp, ix
+	pop	ix
+	ret
+	section	.text,"ax",@progbits
+
+	section	.bss,"aw",@nobits
+	private	_state
+_state:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_menu_cursor
+_menu_cursor:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_running
+_running:
+	rb	1
+
+	section	.rodata,"a",@progbits
+	private	_levels
+_levels:
+	dl	4
+	dl	2
+	dl	40
+	dl	6
+	dl	2
+	dl	5
+	dw	5
+	dw	10975
+	dw	32140
+	dw	32736
+	dw	7404
+	dw	32767
+	dw	32736
+	dl	4
+	dl	4
+	dl	36
+	dl	6
+	dl	3
+	dl	5
+	dw	96
+	dw	1004
+	dw	32384
+	dw	32767
+	dw	224
+	dw	26617
+	dw	1004
+	dl	6
+	dl	4
+	dl	32
+	dl	6
+	dl	4
+	dl	5
+	dw	3077
+	dw	32153
+	dw	891
+	dw	32550
+	dw	7178
+	dw	28383
+	dw	32153
+	dl	6
+	dl	6
+	dl	28
+	dl	8
+	dl	5
+	dl	5
+	dw	5120
+	dw	32576
+	dw	25368
+	dw	31975
+	dw	10240
+	dw	32569
+	dw	32576
+	dl	8
+	dl	6
+	dl	24
+	dl	8
+	dl	6
+	dl	5
+	dw	1
+	dw	992
+	dw	31775
+	dw	32767
+	dw	3174
+	dw	1023
+	dw	992
+
+	section	.bss,"aw",@nobits
+	private	_cur_g1
+_cur_g1:
+	rb	1
+
+	section	.bss,"aw",@nobits
+	private	_cur_g6
+_cur_g6:
+	rb	1
+
+	section	.bss,"aw",@nobits
+	private	_cur_g7
+_cur_g7:
+	rb	1
+
+	section	.bss,"aw",@nobits
+	private	_prev_g1
+_prev_g1:
+	rb	1
+
+	section	.bss,"aw",@nobits
+	private	_prev_g6
+_prev_g6:
+	rb	1
+
+	section	.bss,"aw",@nobits
+	private	_prev_g7
+_prev_g7:
+	rb	1
+
+	section	.bss,"aw",@nobits
+	private	_current_level
+_current_level:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_level_select_cursor
+_level_select_cursor:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_active_cfg
+_active_cfg:
+	rb	32
+
+	section	.bss,"aw",@nobits
+	private	_paddle1_y
+_paddle1_y:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_paddle2_y
+_paddle2_y:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_score1
+_score1:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_score2
+_score2:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_lives
+_lives:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_infinite_mode
+_infinite_mode:
+	rb	1
+
+	section	.bss,"aw",@nobits
+	private	_paused
+_paused:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_last_scorer
+_last_scorer:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_ball_speed_fp
+_ball_speed_fp:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_ball_dy
+_ball_dy:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_ball_x
+_ball_x:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_ball_y
+_ball_y:
+	rb	3
+
+	section	.bss,"aw",@nobits
+	private	_ball_dx
+_ball_dx:
+	rb	3
+
+	section	.rodata,"a",@progbits
+	private	_.str
+_.str:
+	db	"PONG", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.1
+_.str.1:
+	db	"play", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.2
+_.str.2:
+	db	"infinite", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.3
+_.str.3:
+	db	"levels", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.4
+_.str.4:
+	db	"arrows: move  enter: select  clear: quit", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.5
+_.str.5:
+	db	"Level Select", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.6
+_.str.6:
+	db	"Level ", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.7
+_.str.7:
+	db	" - ", 0
+
+	section	.rodata,"a",@progbits
+	private	_level_names
+_level_names:
+	dl	_.str.8
+	dl	_.str.9
+	dl	_.str.10
+	dl	_.str.11
+	dl	_.str.12
+
+	section	.rodata,"a",@progbits
+	private	_.str.8
+_.str.8:
+	db	"Classic", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.9
+_.str.9:
+	db	"Warm Up", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.10
+_.str.10:
+	db	"Getting Serious", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.11
+_.str.11:
+	db	"Fast Lane", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.12
+_.str.12:
+	db	"Intense", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.13
+_.str.13:
+	db	"PAUSED", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.14
+_.str.14:
+	db	"enter to resume", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.15
+_.str.15:
+	db	"INF", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.16
+_.str.16:
+	db	"Lv", 0
+
+	section	.rodata,"a",@progbits
+	private	_heart_bmp
+_heart_bmp:
+	db	"lþþ|8"
+
+	section	.bss,"aw",@nobits
+	private	_game_over_win
+_game_over_win:
+	rb	1
+
+	section	.bss,"aw",@nobits
+	private	_transition_timer
+_transition_timer:
+	rb	3
+
+	section	.rodata,"a",@progbits
+	private	_.str.17
+_.str.17:
+	db	" Complete!", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.18
+_.str.18:
+	db	"Score: ", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.19
+_.str.19:
+	db	"Press Enter to continue", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.20
+_.str.20:
+	db	"YOU WIN!", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.21
+_.str.21:
+	db	"All levels", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.22
+_.str.22:
+	db	"complete!", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.23
+_.str.23:
+	db	"GAME OVER", 0
+
+	section	.rodata,"a",@progbits
+	private	_.str.24
+_.str.24:
+	db	"Press Enter for menu", 0
+
+	ident	"clang version 15.0.0 (https://github.com/CE-Programming/llvm-project 23b78267b5d376b232475d0805a937e54b61e0d0)"
+	extern	__Unwind_SjLj_Register
+	extern	_srand
+	extern	_gfx_SetTextFGColor
+	extern	_gfx_Begin
+	extern	_rand
+	extern	_gfx_PrintString
+	extern	__ishl
+	extern	_gfx_PrintInt
+	extern	__idivs
+	extern	_strlen
+	extern	__setflag
+	extern	__iand
+	extern	__ineg
+	extern	_gfx_HorizLine_NoClip
+	extern	__frameset
+	extern	_gfx_FillRectangle_NoClip
+	extern	_kb_Scan
+	extern	__lsub
+	extern	__ior
+	extern	__ishrs
+	extern	__ishru
+	extern	_gfx_SwapDraw
+	extern	_gfx_SetDraw
+	extern	_gfx_FillScreen
+	extern	__Unwind_SjLj_Unregister
+	extern	__irems
+	extern	__imulu
+	extern	_gfx_SetColor
+	extern	_gfx_SetPixel
+	extern	__sor
+	extern	_gfx_PrintStringXY
+	extern	_gfx_End
+	extern	__lcmpu
+	extern	_gfx_SetTextXY
+	extern	__frameset0
+	extern	_clock
+	extern	_gfx_SetTextScale
