@@ -9878,7 +9878,7 @@ BB50_3:
 	ld	a, (_running)
 	bit	0, a
 	jp	nz, BB50_1
-	jp	BB50_185
+	jp	BB50_183
 BB50_5:
 	ld	c, iyl
 	ld	b, iyh
@@ -9944,7 +9944,7 @@ BB50_11:
 	or	a, a
 	jp	nz, BB50_81
 	bit	6, l
-	jp	nz, BB50_99
+	jp	nz, BB50_97
 	ld	hl, 13
 	push	hl
 	call	_gfx_FillScreen
@@ -10013,7 +10013,7 @@ BB50_15:
 	ld	de, 6
 	or	a, a
 	sbc	hl, de
-	jp	z, BB50_100
+	jp	z, BB50_98
 	ld	de, (ix - 15)
 	ld	hl, ___const.draw_menu.items
 	add	hl, de
@@ -10161,7 +10161,7 @@ BB50_28:
 	ld	hl, 72
 	push	hl
 	ld	hl, _.str.38
-	jp	BB50_125
+	jp	BB50_123
 BB50_29:
 	ld	a, (_prev_g7)
 	cpl
@@ -10248,7 +10248,7 @@ BB50_40:
 	or	a, a
 	jp	nz, BB50_83
 	bit	6, h
-	jp	nz, BB50_105
+	jp	nz, BB50_103
 	ld	hl, 13
 	push	hl
 	call	_gfx_FillScreen
@@ -10281,7 +10281,7 @@ BB50_44:
 	ld	de, 10
 	or	a, a
 	sbc	hl, de
-	jp	z, BB50_106
+	jp	z, BB50_104
 	ld	hl, (ix - 12)
 	ld	de, 8
 	add	hl, de
@@ -10394,7 +10394,7 @@ BB50_56:
 	ld	b, a
 	ld	a, (_anim_active)
 	bit	0, a
-	jp	z, BB50_89
+	jp	z, BB50_87
 	call	_clock
 	ld	bc, (_anim_start)
 	ld	a, (_anim_start+3)
@@ -10404,7 +10404,7 @@ BB50_56:
 	ld	(ix - 12), hl
 	ld	(ix - 15), bc
 	call	__lcmpu
-	jp	nc, BB50_95
+	jp	nc, BB50_93
 	ld	hl, (_anim_from_c)
 	ld	bc, 26
 	call	__imulu
@@ -10485,7 +10485,7 @@ BB50_56:
 	push	de
 	push	hl
 	call	_draw_piece
-	jp	BB50_126
+	jp	BB50_124
 BB50_59:
 	ld	a, (_prev_g7)
 	cpl
@@ -10571,7 +10571,7 @@ BB50_70:
 	or	a, a
 	jp	nz, BB50_84
 	bit	6, c
-	jp	nz, BB50_107
+	jp	nz, BB50_105
 	call	_render_playing
 	ld	hl, 14
 	push	hl
@@ -10645,7 +10645,7 @@ BB50_76:
 	ld	de, 4
 	or	a, a
 	sbc	hl, de
-	jp	z, BB50_127
+	jp	z, BB50_125
 	push	bc
 	pop	hl
 	ld	de, -4
@@ -10708,17 +10708,17 @@ BB50_80:
 	jp	BB50_2
 BB50_81:
 	bit	0, c
-	jp	z, BB50_93
+	jp	z, BB50_91
 	ld	a, 1
 	ld	(_game_mode), a
 	ld	hl, 4
 	ld	(_diff_cursor), hl
 	ld	hl, 1
-	jp	BB50_184
+	jp	BB50_182
 BB50_83:
 	inc	bc
 	ld	(_ai_difficulty), bc
-	jp	BB50_94
+	jp	BB50_92
 BB50_84:
 	ld	hl, (_current_turn)
 	ld	de, 1
@@ -10732,29 +10732,25 @@ BB50_86:
 	add	hl, de
 	ld	a, (hl)
 	ld	hl, (_promo_r)
-	ld	iy, (_promo_c)
+	ld	de, (_promo_c)
 	ld	c, 3
 	call	__ishl
 	push	hl
 	pop	bc
 	ld	hl, _board
 	add	hl, bc
+	add	hl, de
+	ld	(hl), a
+	ld	a, (_pending_move+4)
+	and	a, 1
+	ld	e, a
+	ld	hl, _update_promotion.promo_flags
 	lea	bc, iy
 	add	hl, bc
-	ld	(hl), a
-	ld	hl, _update_promotion.promo_flags
-	add	hl, de
-	ld	l, (hl)
-	ld	a, l
+	ld	a, (hl)
+	or	a, e
 	or	a, 8
 	ld	(_pending_move+4), a
-	ld	a, (_promo_captured)
-	or	a, a
-	jr	z, BB50_88
-	ld	a, l
-	or	a, 9
-	ld	(_pending_move+4), a
-BB50_88:
 	push	hl
 	push	hl
 	ex	de, hl
@@ -10769,16 +10765,16 @@ BB50_88:
 	pop	hl
 	or	a, a
 	jp	nz, BB50_2
-	jp	BB50_110
-BB50_89:
+	jp	BB50_108
+BB50_87:
 	ld	hl, (_ai_thinking)
 	add	hl, bc
 	or	a, a
 	sbc	hl, bc
-	jp	nz, BB50_97
+	jp	nz, BB50_95
 	bit	3, d
 	ld	(ix - 12), e
-	jp	z, BB50_131
+	jp	z, BB50_129
 	ld	a, d
 	ld	iy, (_cur_r)
 	lea	hl, iy
@@ -10786,16 +10782,16 @@ BB50_89:
 	or	a, a
 	sbc	hl, de
 	call	pe, __setflag
-	jp	p, BB50_129
+	jp	p, BB50_127
 	ld	iy, 0
-	jp	BB50_130
-BB50_93:
+	jp	BB50_128
+BB50_91:
 	xor	a, a
 	ld	(_game_mode), a
-BB50_94:
+BB50_92:
 	call	_start_game
 	jp	BB50_2
-BB50_95:
+BB50_93:
 	ld	a, (_anim_piece)
 	ld	(ix - 15), a
 	ld	bc, (_anim_to_r)
@@ -10837,8 +10833,8 @@ BB50_95:
 	ld	a, (_pending_move+4)
 	ld	l, a
 	bit	3, l
-	jp	nz, BB50_111
-BB50_96:
+	jp	nz, BB50_109
+BB50_94:
 	push	hl
 	push	hl
 	ex	de, hl
@@ -10852,20 +10848,20 @@ BB50_96:
 	pop	hl
 	pop	hl
 	jp	BB50_2
-BB50_97:
+BB50_95:
 	ld	de, 1
 	or	a, a
 	sbc	hl, de
-	jp	nz, BB50_118
+	jp	nz, BB50_116
 	ld	hl, 2
 	ld	(_ai_thinking), hl
 	call	_draw_playing
 	jp	BB50_2
-BB50_99:
+BB50_97:
 	xor	a, a
 	ld	(_running), a
 	jp	BB50_2
-BB50_100:
+BB50_98:
 	ld	hl, 320
 	lea	de, iy
 	or	a, a
@@ -10887,12 +10883,12 @@ BB50_100:
 	ld	(ix - 27), hl
 	or	a, a
 	sbc	hl, hl
-BB50_101:
+BB50_99:
 	ld	(ix - 15), hl
 	ld	de, 2
 	or	a, a
 	sbc	hl, de
-	jp	z, BB50_124
+	jp	z, BB50_122
 	ld	(ix - 12), iy
 	ld	hl, (ix - 24)
 	ld	hl, (hl)
@@ -10910,7 +10906,7 @@ BB50_101:
 	or	a, a
 	sbc	hl, de
 	ld	hl, 11
-	jr	nz, BB50_104
+	jr	nz, BB50_102
 	ld	hl, 12
 	push	hl
 	call	_gfx_SetColor
@@ -10929,7 +10925,7 @@ BB50_101:
 	pop	hl
 	pop	hl
 	ld	hl, 13
-BB50_104:
+BB50_102:
 	push	hl
 	call	_gfx_SetTextFGColor
 	pop	hl
@@ -10960,12 +10956,12 @@ BB50_104:
 	ld	iy, (ix - 12)
 	push	bc
 	pop	hl
-	jp	BB50_101
-BB50_105:
+	jp	BB50_99
+BB50_103:
 	or	a, a
 	sbc	hl, hl
-	jp	BB50_184
-BB50_106:
+	jp	BB50_182
+BB50_104:
 	ld	hl, 1
 	push	hl
 	push	hl
@@ -10981,16 +10977,16 @@ BB50_106:
 	ld	hl, 4
 	push	hl
 	ld	hl, _.str.5
-	jp	BB50_125
-BB50_107:
+	jp	BB50_123
+BB50_105:
 	ld	hl, (_current_turn)
 	ld	de, 1
 	or	a, a
 	sbc	hl, de
 	ld	a, e
-	jr	z, BB50_109
+	jr	z, BB50_107
 	ld	a, -1
-BB50_109:
+BB50_107:
 	ld	hl, (_promo_from_r)
 	ld	de, (_promo_from_c)
 	ld	iyl, 3
@@ -11029,39 +11025,39 @@ BB50_109:
 	ld	(_sel_c), hl
 	xor	a, a
 	ld	(_legal_target_count), a
-BB50_110:
+BB50_108:
 	ld	hl, 2
-	jp	BB50_184
-BB50_111:
+	jp	BB50_182
+BB50_109:
 	ld	(ix - 39), bc
 	ld	(ix - 36), de
 	ld	a, (_game_mode)
 	bit	0, a
-	jp	z, BB50_128
+	jp	z, BB50_126
 	ld	a, l
 	ld	hl, (_current_turn)
 	ld	de, -1
 	or	a, a
 	sbc	hl, de
-	jp	nz, BB50_128
+	jp	nz, BB50_126
 	and	a, 48
 	ld	l, a
 	or	a, a
 	ld	a, -5
-	jr	z, BB50_117
+	jr	z, BB50_115
 	ld	a, l
 	cp	a, 16
 	ld	a, -4
-	jr	z, BB50_117
+	jr	z, BB50_115
 	ld	a, l
 	cp	a, 32
 	ld	a, -3
-	jr	z, BB50_117
+	jr	z, BB50_115
 	ld	a, -2
-BB50_117:
+BB50_115:
 	ld	(iy), a
-	jp	BB50_96
-BB50_118:
+	jp	BB50_94
+BB50_116:
 	ld	de, (_ai_difficulty)
 	ld	iy, _update_playing.depth_table
 	add	iy, de
@@ -11089,26 +11085,26 @@ BB50_118:
 	pop	hl
 	ld	a, (ix - 5)
 	cp	a, -1
-	jp	nz, BB50_134
+	jp	nz, BB50_132
 	call	_compute_status
 	ld	l, a
 	cp	a, 2
 	ld	de, 1
-	jr	z, BB50_121
+	jr	z, BB50_119
 	ld	de, 0
-BB50_121:
+BB50_119:
 	ld	(_winner), de
 	ld	a, l
 	or	a, a
 	ld	a, 3
-	jr	z, BB50_123
+	jr	z, BB50_121
 	ld	a, l
-BB50_123:
+BB50_121:
 	ld	(_game_over_reason), a
 	ld	hl, 4
 	ld	(_state), hl
-	jp	BB50_135
-BB50_124:
+	jp	BB50_133
+BB50_122:
 	ld	hl, 1
 	push	hl
 	push	hl
@@ -11124,17 +11120,17 @@ BB50_124:
 	ld	hl, 12
 	push	hl
 	ld	hl, _.str.3
-BB50_125:
+BB50_123:
 	push	hl
 	call	_gfx_PrintStringXY
-BB50_126:
+BB50_124:
 	pop	hl
 	pop	hl
 	pop	hl
-BB50_127:
+BB50_125:
 	call	_gfx_SwapDraw
 	jp	BB50_2
-BB50_128:
+BB50_126:
 	ld	hl, (ix - 21)
 	ld	(_promo_saved_has_last), hl
 	ld	hl, (ix - 24)
@@ -11159,18 +11155,18 @@ BB50_128:
 	sbc	hl, hl
 	ld	(_promo_cursor), hl
 	ld	hl, 3
-	jp	BB50_184
-BB50_129:
+	jp	BB50_182
+BB50_127:
 	dec	iy
-BB50_130:
+BB50_128:
 	ld	e, (ix - 12)
 	ld	d, a
 	ld	(_cur_r), iy
-BB50_131:
+BB50_129:
 	ld	a, d
 	and	a, 1
 	bit	0, a
-	jp	z, BB50_138
+	jp	z, BB50_136
 	ld	a, d
 	ld	iy, (_cur_r)
 	lea	hl, iy
@@ -11178,10 +11174,10 @@ BB50_131:
 	or	a, a
 	sbc	hl, de
 	call	pe, __setflag
-	jp	m, BB50_136
+	jp	m, BB50_134
 	ld	iy, 7
-	jr	BB50_137
-BB50_134:
+	jr	BB50_135
+BB50_132:
 	ld	de, _pending_move
 	ld	(ix - 12), a
 	ld	hl, (ix - 18)
@@ -11225,20 +11221,20 @@ BB50_134:
 	pop	hl
 	pop	hl
 	pop	hl
-BB50_135:
+BB50_133:
 	or	a, a
 	sbc	hl, hl
 	ld	(_ai_thinking), hl
 	jp	BB50_2
-BB50_136:
+BB50_134:
 	inc	iy
-BB50_137:
+BB50_135:
 	ld	e, (ix - 12)
 	ld	d, a
 	ld	(_cur_r), iy
-BB50_138:
+BB50_136:
 	bit	1, d
-	jr	z, BB50_143
+	jr	z, BB50_141
 	ld	a, d
 	ld	iy, (_cur_c)
 	lea	hl, iy
@@ -11246,19 +11242,19 @@ BB50_138:
 	or	a, a
 	sbc	hl, de
 	call	pe, __setflag
-	jp	p, BB50_141
+	jp	p, BB50_139
 	ld	iy, 0
-	jr	BB50_142
-BB50_141:
+	jr	BB50_140
+BB50_139:
 	dec	iy
-BB50_142:
+BB50_140:
 	ld	e, (ix - 12)
 	ld	d, a
 	ld	(_cur_c), iy
-BB50_143:
+BB50_141:
 	bit	2, d
 	ld	(ix - 15), b
-	jr	z, BB50_148
+	jr	z, BB50_146
 	ld	de, (_cur_c)
 	push	de
 	pop	hl
@@ -11266,23 +11262,23 @@ BB50_143:
 	or	a, a
 	sbc	hl, bc
 	call	pe, __setflag
-	jp	m, BB50_146
+	jp	m, BB50_144
 	ld	de, 7
-	jr	BB50_147
-BB50_146:
+	jr	BB50_145
+BB50_144:
 	inc	de
-BB50_147:
+BB50_145:
 	ld	b, (ix - 15)
 	ld	(_cur_c), de
 	ld	e, (ix - 12)
-BB50_148:
+BB50_146:
 	ld	a, e
 	and	a, 1
 	bit	0, a
-	jr	nz, BB50_150
+	jr	nz, BB50_148
 	bit	5, b
-	jp	z, BB50_178
-BB50_150:
+	jp	z, BB50_176
+BB50_148:
 	ld	bc, (_sel_r)
 	ld	iy, (_cur_r)
 	push	bc
@@ -11291,7 +11287,7 @@ BB50_150:
 	or	a, a
 	sbc	hl, de
 	call	pe, __setflag
-	jp	p, BB50_159
+	jp	p, BB50_157
 	ld	de, (_cur_c)
 	ld	(ix - 24), iy
 	lea	hl, iy
@@ -11306,32 +11302,32 @@ BB50_150:
 	ld	l, (hl)
 	ld	a, l
 	or	a, a
-	jp	z, BB50_178
+	jp	z, BB50_176
 	ld	iy, (_current_turn)
 	ld	a, l
 	cp	a, 1
 	call	pe, __setflag
 	ld	a, -1
-	jp	p, BB50_154
+	jp	p, BB50_152
 	ld	a, 0
-BB50_154:
+BB50_152:
 	lea	hl, iy
 	ld	bc, 1
 	or	a, a
 	sbc	hl, bc
-	jr	nz, BB50_156
+	jr	nz, BB50_154
 	bit	0, a
-	jr	nz, BB50_158
-BB50_156:
+	jr	nz, BB50_156
+BB50_154:
 	lea	hl, iy
 	ld	bc, -1
 	or	a, a
 	sbc	hl, bc
 	ld	b, (ix - 15)
-	jp	nz, BB50_178
+	jp	nz, BB50_176
 	bit	0, a
-	jp	nz, BB50_178
-BB50_158:
+	jp	nz, BB50_176
+BB50_156:
 	ld	bc, (ix - 24)
 	ld	(_sel_r), bc
 	ld	(_sel_c), de
@@ -11341,27 +11337,27 @@ BB50_158:
 	push	hl
 	push	de
 	push	bc
-	jp	BB50_175
-BB50_159:
+	jp	BB50_173
+BB50_157:
 	ld	hl, (_cur_c)
 	ld	(ix - 21), hl
 	ld	de, (_sel_c)
 	lea	hl, iy
 	or	a, a
 	sbc	hl, bc
-	jr	nz, BB50_162
+	jr	nz, BB50_160
 	ld	hl, (ix - 21)
 	or	a, a
 	sbc	hl, de
-	jr	nz, BB50_162
+	jr	nz, BB50_160
 	scf
 	sbc	hl, hl
 	ld	(_sel_r), hl
 	ld	(_sel_c), hl
 	xor	a, a
 	ld	(_legal_target_count), a
-	jp	BB50_177
-BB50_162:
+	jp	BB50_175
+BB50_160:
 	ld	(ix - 30), de
 	ld	(ix - 27), bc
 	lea	hl, iy
@@ -11377,63 +11373,63 @@ BB50_162:
 	ld	a, l
 	or	a, a
 	ld	b, (ix - 15)
-	jr	z, BB50_169
+	jr	z, BB50_167
 	ld	de, (_current_turn)
 	ld	a, l
 	cp	a, 1
 	call	pe, __setflag
 	ld	a, -1
-	jp	p, BB50_165
+	jp	p, BB50_163
 	ld	a, 0
-BB50_165:
+BB50_163:
 	push	de
 	pop	hl
 	ld	bc, 1
 	or	a, a
 	sbc	hl, bc
 	ld	b, (ix - 15)
-	jr	nz, BB50_167
+	jr	nz, BB50_165
 	bit	0, a
-	jr	nz, BB50_174
-BB50_167:
+	jr	nz, BB50_172
+BB50_165:
 	ex	de, hl
 	ld	de, -1
 	or	a, a
 	sbc	hl, de
-	jr	nz, BB50_169
+	jr	nz, BB50_167
 	bit	0, a
-	jr	z, BB50_174
-BB50_169:
+	jr	z, BB50_172
+BB50_167:
 	ld	(ix - 24), iy
 	ld	a, (_legal_target_count)
 	ld	de, 0
 	ld	e, a
 	ld	iy, _legal_targets
-BB50_170:
+BB50_168:
 	push	de
 	pop	hl
 	add	hl, bc
 	or	a, a
 	sbc	hl, bc
-	jp	z, BB50_178
+	jp	z, BB50_176
 	ld	bc, 0
 	ld	c, (iy + 2)
 	ld	hl, (ix - 24)
 	or	a, a
 	sbc	hl, bc
-	jr	nz, BB50_173
+	jr	nz, BB50_171
 	ld	bc, 0
 	ld	c, (iy + 3)
 	ld	hl, (ix - 21)
 	or	a, a
 	sbc	hl, bc
-	jr	z, BB50_176
-BB50_173:
+	jr	z, BB50_174
+BB50_171:
 	lea	iy, iy + 5
 	dec	de
 	ld	b, (ix - 15)
-	jr	BB50_170
-BB50_174:
+	jr	BB50_168
+BB50_172:
 	ld	(_sel_r), iy
 	ld	de, (ix - 21)
 	ld	(_sel_c), de
@@ -11443,7 +11439,7 @@ BB50_174:
 	push	hl
 	push	de
 	push	iy
-BB50_175:
+BB50_173:
 	call	_engine_get_moves_from
 	ld	b, (ix - 15)
 	pop	hl
@@ -11451,8 +11447,8 @@ BB50_175:
 	pop	hl
 	pop	hl
 	ld	(_legal_target_count), a
-	jr	BB50_178
-BB50_176:
+	jr	BB50_176
+BB50_174:
 	ld	de, _pending_move
 	lea	hl, iy
 	ld	bc, 5
@@ -11487,42 +11483,42 @@ BB50_176:
 	pop	hl
 	pop	hl
 	pop	hl
-BB50_177:
+BB50_175:
 	ld	b, (ix - 15)
-BB50_178:
+BB50_176:
 	bit	6, (ix - 12)
 	ld	a, 0
-	jr	z, BB50_181
+	jr	z, BB50_179
 	ld	hl, (_sel_r)
 	ld	de, 0
 	or	a, a
 	sbc	hl, de
 	call	pe, __setflag
-	jp	m, BB50_183
+	jp	m, BB50_181
 	scf
 	sbc	hl, hl
 	ld	(_sel_r), hl
 	ld	(_sel_c), hl
 	ld	(_legal_target_count), a
-BB50_181:
+BB50_179:
 	bit	6, b
-	jr	nz, BB50_183
+	jr	nz, BB50_181
 	ld	hl, (_state)
 	ld	de, 2
 	or	a, a
 	sbc	hl, de
 	call	z, _draw_playing
 	jp	BB50_2
-BB50_183:
+BB50_181:
 	ld	hl, (_current_turn)
 	call	__ineg
 	ld	(_winner), hl
 	ld	(_game_over_reason), a
 	ld	hl, 4
-BB50_184:
+BB50_182:
 	ld	(_state), hl
 	jp	BB50_2
-BB50_185:
+BB50_183:
 	call	_gfx_End
 	or	a, a
 	sbc	hl, hl
@@ -11664,11 +11660,15 @@ BB51_12:
 	ld	hl, 1
 	ld	(_current_turn), hl
 	ld	(_has_last_move), iy
-	xor	a, a
+	dec	l
+	ld	a, l
 	ld	(_legal_target_count), a
 	ld	(_ai_thinking), iy
+	xor	a, a
+	ld	(_anim_active), a
+	ld	a, l
 	ld	(_game_over_reason), a
-	inc	hl
+	ld	hl, 2
 	ld	(_state), hl
 	ld	sp, ix
 	pop	ix
@@ -12895,15 +12895,24 @@ BB56_2:
 	ld	bc, 50
 	call	__imulu
 	push	hl
-	pop	de
-	ld	bc, 200
+	pop	bc
+	ld	de, 200
 	or	a, a
-	sbc	hl, bc
+	sbc	hl, de
 	call	pe, __setflag
 	jp	m, BB56_4
-	ld	de, 200
+	ld	bc, 200
 BB56_4:
-	ld	(ix - 9), de
+	ld	de, 2
+	push	bc
+	pop	hl
+	or	a, a
+	sbc	hl, de
+	call	pe, __setflag
+	jp	p, BB56_6
+	ld	bc, 1
+BB56_6:
+	ld	(ix - 9), bc
 	ld	c, 3
 	ld	hl, (ix + 6)
 	call	__ishl
@@ -12955,7 +12964,7 @@ BB56_4:
 	ld	(hl), 0
 	ld	a, (_pending_effects+5)
 	or	a, a
-	jr	z, BB56_6
+	jr	z, BB56_8
 	ld	a, (_pending_effects+6)
 	ld	de, 0
 	push	de
@@ -12971,10 +12980,10 @@ BB56_4:
 	add	hl, bc
 	add	hl, de
 	ld	(hl), d
-BB56_6:
+BB56_8:
 	ld	a, (_pending_effects)
 	or	a, a
-	jr	z, BB56_8
+	jr	z, BB56_10
 	ld	a, (_pending_effects+1)
 	ld	de, 0
 	push	de
@@ -13011,7 +13020,7 @@ BB56_6:
 	add	iy, de
 	ld	a, (ix - 3)
 	ld	(iy), a
-BB56_8:
+BB56_10:
 	ld	sp, ix
 	pop	ix
 	ret
@@ -14824,6 +14833,11 @@ _ai_thinking:
 	rb	3
 
 	section	.bss,"aw",@nobits
+	private	_anim_active
+_anim_active:
+	rb	1
+
+	section	.bss,"aw",@nobits
 	private	_game_over_reason
 _game_over_reason:
 	rb	1
@@ -14873,11 +14887,6 @@ _.str.4:
 	private	_.str.5
 _.str.5:
 	db	"left/right: choose  enter: start  clear: back", 0
-
-	section	.bss,"aw",@nobits
-	private	_anim_active
-_anim_active:
-	rb	1
 
 	section	.rodata,"a",@progbits
 	private	_update_playing.depth_table
@@ -15255,8 +15264,8 @@ _switch.table.main:
 	extern	_gfx_SetDraw
 	extern	__Unwind_SjLj_Unregister
 	extern	_gfx_SetColor
-	extern	__bshl
 	extern	__land
+	extern	__bshl
 	extern	__sor
 	extern	_gfx_PrintStringXY
 	extern	_gfx_SetTextScale

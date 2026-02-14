@@ -773,6 +773,7 @@ static void start_game(void)
     has_last_move = 0;
     legal_target_count = 0;
     ai_thinking = 0;
+    anim_active = 0;
     game_over_reason = 0;
     state = STATE_PLAYING;
 }
@@ -895,6 +896,7 @@ static void start_move_anim(int from_r, int from_c, int to_r, int to_c)
     dist = (dr > dc) ? dr : dc; /* Chebyshev distance */
     ms = dist * ANIM_MS_PER_SQ;
     if (ms > ANIM_MAX_MS) ms = ANIM_MAX_MS;
+    if (ms < 1) ms = 1; /* guard against zero duration */
 
     anim_piece = board[from_r][from_c];
     anim_captured = board[to_r][to_c];
@@ -1203,10 +1205,9 @@ static void update_promotion(void)
         pieces = (current_turn == WHITE_TURN) ? promo_pieces_white : promo_pieces_black;
         board[promo_r][promo_c] = pieces[promo_cursor];
 
-        /* set correct promotion flags on the pending move */
-        pending_move.flags = ENGINE_FLAG_PROMOTION | promo_flags[promo_cursor];
-        if (promo_captured != EMPTY)
-            pending_move.flags |= ENGINE_FLAG_CAPTURE;
+        /* preserve capture flag from original move, set promotion type */
+        pending_move.flags = (pending_move.flags & ENGINE_FLAG_CAPTURE)
+                           | ENGINE_FLAG_PROMOTION | promo_flags[promo_cursor];
 
         /* apply the move to the engine and check status */
         if (apply_engine_move(pending_move))
