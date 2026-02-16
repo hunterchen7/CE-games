@@ -247,13 +247,50 @@ Searched each of 50 benchmark positions for 15 seconds on the eZ80 (48 MHz, cycl
 - **Average: 5,992 nodes/position** in 15 seconds (~399 NPS)
 - Depth range: 1-17 (simple endgames reach d7-17, complex middlegames d1-3)
 
+## 30s Search on eZ80 (50 positions)
+
+Searched each of 50 benchmark positions for 30 seconds on the eZ80 (48 MHz, cycle-accurate emulator).
+Depth capped at 15 to prevent timer overflow aliasing on trivial endgames (P17 exhausts d15 in 8.7s).
+
+| Pos | Nodes  | Depth |    ms | Pos | Nodes  | Depth |    ms |
+| --- | -----: | ----: | ----: | --- | -----: | ----: | ----: |
+| P0  |   5467 |     5 | 30744 | P25 |   8643 |     4 | 30713 |
+| P1  |   7190 |     3 | 30910 | P26 |   6807 |     4 | 30077 |
+| P2  |  11677 |     7 | 30353 | P27 |   3334 |     3 | 30334 |
+| P3  |   4706 |     3 | 30600 | P28 |   3653 |     3 | 30475 |
+| P4  |   6453 |     5 | 30278 | P29 |   4064 |     3 | 30145 |
+| P5  |   4390 |     3 | 30312 | P30 |   9243 |     7 | 30028 |
+| P6  |  15220 |     8 | 30083 | P31 |  12547 |     8 | 30076 |
+| P7  |  16109 |     8 | 30196 | P32 |  10450 |     6 | 30403 |
+| P8  |  11646 |     7 | 30096 | P33 |   8552 |     6 | 30184 |
+| P9  |  26462 |     7 | 30008 | P34 |  15688 |     5 | 30027 |
+| P10 |  23270 |     7 | 30115 | P35 |   9591 |     5 | 30453 |
+| P11 |   6986 |     5 | 30306 | P36 |   6410 |     4 | 30694 |
+| P12 |   9372 |     6 | 30283 | P37 |   3495 |     4 | 30255 |
+| P13 |   8398 |     5 | 30029 | P38 |   7397 |     5 | 30557 |
+| P14 |   9770 |     5 | 30043 | P39 |   4362 |     3 | 30209 |
+| P15 |  12613 |     7 | 30095 | P40 |   5008 |     4 | 30234 |
+| P16 |  19757 |     7 | 30147 | P41 |   6108 |     7 | 30491 |
+| P17 |   7115 |    15 |  8745 | P42 |   5753 |     5 | 30362 |
+| P18 |  12543 |     9 | 30120 | P43 |  11440 |     6 | 30645 |
+| P19 |   8586 |     5 | 30214 | P44 |  21818 |     8 | 30205 |
+| P20 |  15211 |     7 | 30069 | P45 |   6053 |     5 | 30022 |
+| P21 |   4660 |     3 | 30740 | P46 |  13535 |     9 | 30213 |
+| P22 |  22274 |     7 | 30257 | P47 |  20410 |     9 | 30006 |
+| P23 |  21461 |     7 | 30186 | P48 |   5267 |     4 | 30708 |
+| P24 |   8597 |     7 | 30302 | P49 |  11688 |     6 | 30064 |
+
+- **Total: 521,249 nodes** across 50 positions
+- **Average: 10,425 nodes/position** in 30 seconds (~347 NPS)
+- Depth range: 3-15 (P17 exhausts d15 search tree; most positions reach d3-9)
+
 ## Tournament vs Stockfish
 
 the methodology here is to limit nodes to avg. nodes it got in the 50 benchmark positions and then have the node-limited engine play against stockfish at diff. ratings. obv. this is flawed since nodes/pos differs by a good margin, but this should still paint a decent picture.
 
 ### Node-limited (1800 nodes, 0.1s/move, XXL book)
 
-Simulates eZ80 playing strength (~1800 nodes per move based on 5s search bench).
+Simulates eZ80 playing strength (~1800 nodes per move based on 5s search bench). forgot to save the pgn for this.
 
 | SF Elo | W   | D   | L   | Score   | Pct | Elo diff |
 | ------ | --- | --- | --- | ------- | --- | -------- |
@@ -297,6 +334,23 @@ Simulates ~15s search on eZ80 (~5,992 nodes per move based on 15s search bench).
 | 2100   | 12  | 8   | 10  | 16.0/30 | 53% | +23      |
 
 **Estimated eZ80 Elo: ~1950** (50% mark vs SF-1950)
+
+### Node-limited (12000 nodes, 0.1s/move, no book)
+
+PGN: [`chess/engine/tournament_12000_nobook.pgn`](../../chess/engine/tournament_12000_nobook.pgn), [`chess/engine/tournament_12000_2150.pgn`](../../chess/engine/tournament_12000_2150.pgn), [`chess/engine/tournament_12000_1900.pgn`](../../chess/engine/tournament_12000_1900.pgn)
+
+Simulates ~30s search on eZ80 (~10,425 nodes per move based on 30s search bench).
+
+| SF Elo | W   | D   | L   | Score   | Pct | Elo diff |
+| ------ | --- | --- | --- | ------- | --- | -------- |
+| 1900   | 24  | 10  | 26  | 29.0/60 | 48% | -12      |
+| 2000   | 15  | 7   | 8   | 18.5/30 | 62% | +83      |
+| 2100   | 13  | 7   | 10  | 16.5/30 | 55% | +35      |
+| 2150   | 10  | 4   | 16  | 12.0/30 | 40% | -70      |
+| 2200   | 8   | 8   | 14  | 12.0/30 | 40% | -70      |
+| 2300   | 7   | 6   | 17  | 10.0/30 | 33% | -120     |
+
+**Estimated eZ80 Elo: ~2100** (55% vs SF-2100, 40% vs SF-2200)
 
 ### "Unleashed" (0.1s/move, no node limit, XXL book)
 
