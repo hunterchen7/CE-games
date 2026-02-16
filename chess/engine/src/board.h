@@ -8,6 +8,7 @@
 typedef struct {
     uint8_t  squares[128];       /* 0x88 board array */
     uint8_t  piece_list[2][16];  /* square index per piece, per side */
+    uint8_t  piece_index[128];   /* square -> piece_list index, 0xFF if empty */
     uint8_t  piece_count[2];     /* number of pieces per side */
     uint8_t  king_sq[2];         /* king square per side */
     uint8_t  side;               /* WHITE or BLACK */

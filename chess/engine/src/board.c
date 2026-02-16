@@ -3,6 +3,9 @@
 #include "zobrist.h"
 #include <string.h>
 
+/* Sentinel for piece_index[] entries when no piece occupies a square. */
+#define PLIST_INVALID 0xFF
+
 /* ========== Castling Rights Table ========== */
 
 /* After any move touching square sq, castling rights are AND'd with this mask.
@@ -108,6 +111,7 @@ void board_init(board_t *b)
         zobrist_init(0);
 
     memset(b, 0, sizeof(board_t));
+    memset(b->piece_index, PLIST_INVALID, sizeof(b->piece_index));
     b->ep_square = SQ_NONE;
     b->king_sq[WHITE] = SQ_NONE;
     b->king_sq[BLACK] = SQ_NONE;
@@ -122,13 +126,15 @@ static void board_add_piece(board_t *b, uint8_t sq, uint8_t piece)
     uint8_t idx = EVAL_INDEX(type);
     uint8_t sq64 = SQ_TO_SQ64(sq);
     uint8_t pst_sq = (side == WHITE) ? sq64 : PST_FLIP(sq64);
+    uint8_t list_idx = b->piece_count[side];
 
     b->squares[sq] = piece;
     if (type == PIECE_KING) {
         b->king_sq[side] = sq;
     }
-    b->piece_list[side][b->piece_count[side]] = sq;
-    b->piece_count[side]++;
+    b->piece_list[side][list_idx] = sq;
+    b->piece_index[sq] = list_idx;
+    b->piece_count[side] = list_idx + 1;
 
     /* Incremental eval */
     b->mg[side] += mg_table[idx][pst_sq];
@@ -140,26 +146,33 @@ static void board_add_piece(board_t *b, uint8_t sq, uint8_t piece)
    Does NOT clear squares[] — caller must handle that. */
 static void plist_remove(board_t *b, uint8_t side, uint8_t sq)
 {
-    uint8_t i;
-    for (i = 0; i < b->piece_count[side]; i++) {
-        if (b->piece_list[side][i] == sq) {
-            b->piece_count[side]--;
-            b->piece_list[side][i] = b->piece_list[side][b->piece_count[side]];
-            return;
-        }
+    uint8_t idx = b->piece_index[sq];
+    uint8_t last_idx;
+    uint8_t last_sq;
+
+    if (idx == PLIST_INVALID || idx >= b->piece_count[side]) return;
+
+    last_idx = b->piece_count[side] - 1;
+    last_sq = b->piece_list[side][last_idx];
+    b->piece_count[side] = last_idx;
+
+    if (idx != last_idx) {
+        b->piece_list[side][idx] = last_sq;
+        b->piece_index[last_sq] = idx;
     }
+    b->piece_index[sq] = PLIST_INVALID;
 }
 
 /* Update piece list: change a piece's square from old_sq to new_sq. */
 static void plist_move(board_t *b, uint8_t side, uint8_t old_sq, uint8_t new_sq)
 {
-    uint8_t i;
-    for (i = 0; i < b->piece_count[side]; i++) {
-        if (b->piece_list[side][i] == old_sq) {
-            b->piece_list[side][i] = new_sq;
-            return;
-        }
-    }
+    uint8_t idx = b->piece_index[old_sq];
+
+    if (idx == PLIST_INVALID || idx >= b->piece_count[side]) return;
+
+    b->piece_list[side][idx] = new_sq;
+    b->piece_index[new_sq] = idx;
+    b->piece_index[old_sq] = PLIST_INVALID;
 }
 
 /* ========== Position Setup ========== */
@@ -537,6 +550,7 @@ void board_unmake(board_t *b, move_t m, const undo_t *u)
 
         b->squares[cap_sq] = u->captured;
         b->piece_list[opp][b->piece_count[opp]] = cap_sq;
+        b->piece_index[cap_sq] = b->piece_count[opp];
         b->piece_count[opp]++;
     } else if (u->captured != PIECE_NONE) {
         uint8_t opp = side ^ 1;
@@ -549,6 +563,7 @@ void board_unmake(board_t *b, move_t m, const undo_t *u)
 
         b->squares[to] = u->captured;
         b->piece_list[opp][b->piece_count[opp]] = to;
+        b->piece_index[to] = b->piece_count[opp];
         b->piece_count[opp]++;
     }
 
