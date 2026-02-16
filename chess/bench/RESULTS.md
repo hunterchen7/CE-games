@@ -156,7 +156,7 @@ Positions drawn from well-known chess engine test suites.
 ## 5s Search on eZ80 (50 positions)
 
 Searched each of 50 benchmark positions for 5 seconds on the eZ80 (48 MHz, cycle-accurate emulator).
-Post eval-optimization + Texel tuning (2026-02-16).
+Pre-Texel HCE, pre eval-optimization.
 
 | Pos | Nodes | Depth |   ms | Pos | Nodes | Depth |   ms |
 | --- | ----: | ----: | ---: | --- | ----: | ----: | ---: |
@@ -194,6 +194,7 @@ Post eval-optimization + Texel tuning (2026-02-16).
 ## 10s Search on eZ80 (50 positions)
 
 Searched each of 50 benchmark positions for 10 seconds on the eZ80 (48 MHz, cycle-accurate emulator).
+Pre-Texel HCE, pre eval-optimization.
 
 | Pos | Nodes | Depth |    ms | Pos | Nodes | Depth |    ms |
 | --- | ----: | ----: | ----: | --- | ----: | ----: | ----: |
@@ -379,6 +380,7 @@ Hand-crafted eval weights before Texel tuning, no code optimizations.
 ## 15s Search on eZ80 (50 positions)
 
 Searched each of 50 benchmark positions for 15 seconds on the eZ80 (48 MHz, cycle-accurate emulator).
+Pre-Texel HCE, pre eval-optimization.
 
 | Pos | Nodes | Depth |    ms | Pos | Nodes | Depth |    ms |
 | --- | ----: | ----: | ----: | --- | ----: | ----: | ----: |
@@ -415,7 +417,7 @@ Searched each of 50 benchmark positions for 15 seconds on the eZ80 (48 MHz, cycl
 ## 30s Search on eZ80 (50 positions)
 
 Searched each of 50 benchmark positions for 30 seconds on the eZ80 (48 MHz, cycle-accurate emulator).
-Depth capped at 15 to prevent timer overflow aliasing on trivial endgames (P17 exhausts d15 in 8.7s).
+Pre-Texel HCE, pre eval-optimization. Depth capped at 15 to prevent timer overflow aliasing on trivial endgames (P17 exhausts d15 in 8.7s).
 
 | Pos | Nodes | Depth |    ms | Pos | Nodes | Depth |    ms |
 | --- | ----: | ----: | ----: | --- | ----: | ----: | ----: |
