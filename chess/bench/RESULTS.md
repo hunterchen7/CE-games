@@ -26,6 +26,7 @@ Paired match setup:
 | ------------------------------------- | ---------- | ------- | -------- | ------------------- | ----------- |
 | Round1 1M Texel vs Pre-tuning (`HEAD`) | 2296.5/4000 | 57.41%  | +51.89   | [+41.97, +61.89]    | `chess/engine/tuning/results/h2h_round1_vs_pretune_4000g.json` |
 | Round2 1M Texel vs Round1 1M Texel     | 1991.0/4000 | 49.78%  | -1.56    | [-11.29, +8.16]     | `chess/engine/tuning/results/h2h_round2_vs_round1_4000g.json` |
+| Round3 1M Texel vs Round1 1M Texel     | 1970.0/4000 | 49.25%  | -5.21    | [-14.92, +4.48]     | `chess/engine/tuning/results/h2h_round3_vs_round1_4000g.json` |
 
 Current kept eval parameters: **Round1 1M Texel**.
 
