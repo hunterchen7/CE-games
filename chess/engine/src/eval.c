@@ -245,7 +245,6 @@ int16_t evaluate(const board_t *b)
     int16_t mg, eg, phase;
     int32_t score;
     uint8_t i, sq, row, col, type;
-    uint8_t wb, bb;
     uint8_t w_pawns[8], b_pawns[8];
 
     /* Material + PST from white's perspective (maintained incrementally) */
@@ -253,15 +252,8 @@ int16_t evaluate(const board_t *b)
     eg = b->eg[WHITE] - b->eg[BLACK];
 
     /* Bishop pair bonus */
-    wb = 0; bb = 0;
-    for (i = 0; i < b->piece_count[WHITE]; i++) {
-        if (PIECE_TYPE(b->squares[b->piece_list[WHITE][i]]) == PIECE_BISHOP) wb++;
-    }
-    for (i = 0; i < b->piece_count[BLACK]; i++) {
-        if (PIECE_TYPE(b->squares[b->piece_list[BLACK][i]]) == PIECE_BISHOP) bb++;
-    }
-    if (wb >= 2) { mg += BISHOP_PAIR_MG; eg += BISHOP_PAIR_EG; }
-    if (bb >= 2) { mg -= BISHOP_PAIR_MG; eg -= BISHOP_PAIR_EG; }
+    if (b->bishop_count[WHITE] >= 2) { mg += BISHOP_PAIR_MG; eg += BISHOP_PAIR_EG; }
+    if (b->bishop_count[BLACK] >= 2) { mg -= BISHOP_PAIR_MG; eg -= BISHOP_PAIR_EG; }
 
     /* ---- Tempo ---- */
 #ifndef NO_TEMPO

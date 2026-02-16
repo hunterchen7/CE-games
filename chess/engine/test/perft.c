@@ -51,6 +51,8 @@ static void board_set_fen(board_t *b, const char *fen)
                 b->piece_list[s][idx] = sq;
                 b->piece_index[sq] = idx;
                 b->piece_count[s] = idx + 1;
+                if (PIECE_TYPE(piece) == PIECE_BISHOP)
+                    b->bishop_count[s]++;
             }
             c++;
         }

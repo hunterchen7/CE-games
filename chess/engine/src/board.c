@@ -135,6 +135,8 @@ static void board_add_piece(board_t *b, uint8_t sq, uint8_t piece)
     b->piece_list[side][list_idx] = sq;
     b->piece_index[sq] = list_idx;
     b->piece_count[side] = list_idx + 1;
+    if (type == PIECE_BISHOP)
+        b->bishop_count[side]++;
 
     /* Incremental eval */
     b->mg[side] += mg_table[idx][pst_sq];
@@ -289,6 +291,8 @@ void board_make(board_t *b, move_t m, undo_t *u)
 
             b->squares[cap_sq] = PIECE_NONE;
             plist_remove(b, opp, cap_sq);
+            if (PIECE_TYPE(cap_piece) == PIECE_BISHOP)
+                b->bishop_count[opp]--;
         }
 
         /* Store the actual captured piece for unmake reference
@@ -307,6 +311,8 @@ void board_make(board_t *b, move_t m, undo_t *u)
         b->phase -= phase_weight[cap_eidx];
 
         plist_remove(b, opp, to);
+        if (PIECE_TYPE(captured) == PIECE_BISHOP)
+            b->bishop_count[opp]--;
     }
 
     /* Move piece on board */
@@ -351,6 +357,8 @@ void board_make(board_t *b, move_t m, undo_t *u)
         b->mg[side] += mg_table[promo_eidx][pst_to];
         b->eg[side] += eg_table[promo_eidx][pst_to];
         b->phase += phase_weight[promo_eidx];
+        if (promo_type == PIECE_BISHOP)
+            b->bishop_count[side]++;
 
         b->squares[to] = promo_piece;
     }
@@ -483,6 +491,8 @@ void board_unmake(board_t *b, move_t m, const undo_t *u)
         b->mg[side] += mg_table[eidx][pst_to];
         b->eg[side] += eg_table[eidx][pst_to];
         b->phase -= phase_weight[promo_eidx];
+        if (promo_type == PIECE_BISHOP)
+            b->bishop_count[side]--;
 
         b->squares[to] = piece;  /* put the pawn back */
     }
@@ -546,6 +556,8 @@ void board_unmake(board_t *b, move_t m, const undo_t *u)
             b->mg[opp] += mg_table[cap_eidx][cap_pst];
             b->eg[opp] += eg_table[cap_eidx][cap_pst];
             b->phase += phase_weight[cap_eidx];
+            if (PIECE_TYPE(u->captured) == PIECE_BISHOP)
+                b->bishop_count[opp]++;
         }
 
         b->squares[cap_sq] = u->captured;
@@ -560,6 +572,8 @@ void board_unmake(board_t *b, move_t m, const undo_t *u)
         b->mg[opp] += mg_table[cap_eidx][cap_pst];
         b->eg[opp] += eg_table[cap_eidx][cap_pst];
         b->phase += phase_weight[cap_eidx];
+        if (PIECE_TYPE(u->captured) == PIECE_BISHOP)
+            b->bishop_count[opp]++;
 
         b->squares[to] = u->captured;
         b->piece_list[opp][b->piece_count[opp]] = to;
