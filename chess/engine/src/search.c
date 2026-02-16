@@ -227,6 +227,210 @@ static void update_history(uint8_t side, move_t m, int8_t depth)
     history[side][m.to] = val;
 }
 
+/* ========== Legality Fast Path ========== */
+
+typedef struct {
+    uint8_t in_check;
+    uint8_t num_checkers;
+    uint8_t checker_sq[2];
+    uint8_t pinned_count;
+    uint8_t pinned_sq[8];
+} legal_info_t;
+
+static const int8_t atk_knight_offsets[8] = { -33, -31, -18, -14, 14, 18, 31, 33 };
+static const int8_t atk_king_offsets[8]   = { -17, -16, -15, -1, 1, 15, 16, 17 };
+static const int8_t atk_ray_offsets[8]    = { -17, -16, -15, -1, 1, 15, 16, 17 };
+
+static inline void add_checker(legal_info_t *li, uint8_t sq)
+{
+    if (li->num_checkers < 2)
+        li->checker_sq[li->num_checkers] = sq;
+    li->num_checkers++;
+    li->in_check = 1;
+}
+
+static inline uint8_t is_sq_pinned(const legal_info_t *li, uint8_t sq)
+{
+    uint8_t i;
+    for (i = 0; i < li->pinned_count; i++) {
+        if (li->pinned_sq[i] == sq) return 1;
+    }
+    return 0;
+}
+
+/* Compute check/pin information once per node from the king's perspective. */
+static void compute_legal_info(const board_t *b, legal_info_t *li)
+{
+    uint8_t side = b->side;
+    uint8_t opp = side ^ 1;
+    uint8_t king_sq = b->king_sq[side];
+    uint8_t attacker_color = (opp == WHITE) ? COLOR_WHITE : COLOR_BLACK;
+    uint8_t i;
+    uint8_t target;
+
+    li->in_check = 0;
+    li->num_checkers = 0;
+    li->pinned_count = 0;
+
+    /* Knight checkers */
+    for (i = 0; i < 8; i++) {
+        target = king_sq + atk_knight_offsets[i];
+        if (SQ_VALID(target)) {
+            uint8_t p = b->squares[target];
+            if (p != PIECE_NONE &&
+                PIECE_COLOR(p) == attacker_color &&
+                PIECE_TYPE(p) == PIECE_KNIGHT) {
+                add_checker(li, target);
+            }
+        }
+    }
+
+    /* Pawn checkers */
+    {
+        int8_t pawn_dir = (opp == WHITE) ? 16 : -16;
+        uint8_t pawn = MAKE_PIECE(attacker_color, PIECE_PAWN);
+
+        target = king_sq + pawn_dir - 1;
+        if (SQ_VALID(target) && b->squares[target] == pawn)
+            add_checker(li, target);
+        target = king_sq + pawn_dir + 1;
+        if (SQ_VALID(target) && b->squares[target] == pawn)
+            add_checker(li, target);
+    }
+
+    /* Adjacent king checker (illegal positions, but keep robust) */
+    for (i = 0; i < 8; i++) {
+        target = king_sq + atk_king_offsets[i];
+        if (SQ_VALID(target)) {
+            uint8_t p = b->squares[target];
+            if (p != PIECE_NONE &&
+                PIECE_COLOR(p) == attacker_color &&
+                PIECE_TYPE(p) == PIECE_KING) {
+                add_checker(li, target);
+            }
+        }
+    }
+
+    /* Sliding checkers and pinned friendly pieces */
+    for (i = 0; i < 8; i++) {
+        int8_t dir = atk_ray_offsets[i];
+        uint8_t pinned_sq = SQ_NONE;
+        uint8_t is_orth = (dir == -16 || dir == -1 || dir == 1 || dir == 16);
+
+        target = king_sq + dir;
+        while (SQ_VALID(target)) {
+            uint8_t p = b->squares[target];
+            if (p == PIECE_NONE) {
+                target += dir;
+                continue;
+            }
+
+            if (PIECE_COLOR(p) == attacker_color) {
+                uint8_t type = PIECE_TYPE(p);
+                uint8_t slider = is_orth ?
+                    (type == PIECE_ROOK || type == PIECE_QUEEN) :
+                    (type == PIECE_BISHOP || type == PIECE_QUEEN);
+
+                if (slider) {
+                    if (pinned_sq == SQ_NONE) {
+                        add_checker(li, target);
+                    } else if (li->pinned_count < 8) {
+                        li->pinned_sq[li->pinned_count++] = pinned_sq;
+                    }
+                }
+                break;
+            }
+
+            /* Friendly piece blocks ray; first one may be pinned. */
+            if (pinned_sq == SQ_NONE)
+                pinned_sq = target;
+            else
+                break;
+
+            target += dir;
+        }
+    }
+}
+
+static inline uint8_t move_needs_legality_check(const board_t *b,
+                                                const legal_info_t *li,
+                                                move_t m)
+{
+    uint8_t type;
+
+    if (li->in_check) return 1;
+    if (m.flags & FLAG_EN_PASSANT) return 1;
+
+    type = PIECE_TYPE(b->squares[m.from]);
+    if (type == PIECE_KING) return 1;
+    if (is_sq_pinned(li, m.from)) return 1;
+
+    return 0;
+}
+
+static int8_t ray_dir_between(uint8_t from, uint8_t to)
+{
+    uint8_t i;
+    for (i = 0; i < 8; i++) {
+        int8_t dir = atk_ray_offsets[i];
+        uint8_t sq = from + dir;
+        while (SQ_VALID(sq)) {
+            if (sq == to) return dir;
+            sq += dir;
+        }
+    }
+    return 0;
+}
+
+/* Fast reject for in-check nodes: keep only possible evasions. */
+static uint8_t is_evasion_candidate(const board_t *b,
+                                    const legal_info_t *li,
+                                    move_t m)
+{
+    uint8_t mover_type;
+    uint8_t checker_sq;
+    uint8_t checker_type;
+    int8_t dir;
+    uint8_t sq;
+
+    if (!li->in_check) return 1;
+
+    mover_type = PIECE_TYPE(b->squares[m.from]);
+    if (mover_type == PIECE_KING) return 1;
+
+    if (li->num_checkers >= 2) return 0; /* only king moves can evade */
+
+    checker_sq = li->checker_sq[0];
+
+    /* Normal capture of checker */
+    if (m.to == checker_sq) return 1;
+
+    /* EP can capture the checking pawn while landing elsewhere */
+    if (m.flags & FLAG_EN_PASSANT) {
+        uint8_t cap_sq = (b->side == WHITE) ? (m.to + 16) : (m.to - 16);
+        if (cap_sq == checker_sq) return 1;
+    }
+
+    checker_type = PIECE_TYPE(b->squares[checker_sq]);
+    if (checker_type != PIECE_BISHOP &&
+        checker_type != PIECE_ROOK &&
+        checker_type != PIECE_QUEEN) {
+        return 0; /* non-slider checks cannot be blocked */
+    }
+
+    /* Single slider check: allow blocks on the king-checker ray. */
+    dir = ray_dir_between(b->king_sq[b->side], checker_sq);
+    if (dir == 0) return 0;
+
+    sq = b->king_sq[b->side] + dir;
+    while (sq != checker_sq) {
+        if (m.to == sq) return 1;
+        sq += dir;
+    }
+
+    return 0;
+}
+
 /* ========== Quiescence Search ========== */
 
 static int16_t quiescence(board_t *b, int16_t alpha, int16_t beta,
@@ -239,6 +443,7 @@ static int16_t quiescence(board_t *b, int16_t alpha, int16_t beta,
     uint16_t base;
     scored_move_t *moves;
     undo_t undo;
+    legal_info_t linfo;
 
     if (search_stopped) return 0;
     search_nodes++;
@@ -247,7 +452,8 @@ static int16_t quiescence(board_t *b, int16_t alpha, int16_t beta,
 
     if (ply >= MAX_PLY || qs_depth >= QS_MAX_DEPTH) return evaluate(b);
 
-    in_check = is_square_attacked(b, b->king_sq[b->side], b->side ^ 1);
+    compute_legal_info(b, &linfo);
+    in_check = linfo.in_check;
 
     if (in_check) {
         /* In check: must search all moves (evasions) */
@@ -268,6 +474,8 @@ static int16_t quiescence(board_t *b, int16_t alpha, int16_t beta,
         /* Keep caller's alpha bound (do NOT reset to -SCORE_INF) */
         for (i = 0; i < count; i++) {
             pick_move(moves, count, i);
+            if (!is_evasion_candidate(b, &linfo, moves[i].move))
+                continue;
             board_make(b, moves[i].move, &undo);
             if (!board_is_legal(b)) {
                 board_unmake(b, moves[i].move, &undo);
@@ -315,9 +523,11 @@ static int16_t quiescence(board_t *b, int16_t alpha, int16_t beta,
     score_moves(b, moves, count, ply, MOVE_NONE);
 
     for (i = 0; i < count; i++) {
+        uint8_t need_legality_check;
         pick_move(moves, count, i);
+        need_legality_check = move_needs_legality_check(b, &linfo, moves[i].move);
         board_make(b, moves[i].move, &undo);
-        if (!board_is_legal(b)) {
+        if (need_legality_check && !board_is_legal(b)) {
             board_unmake(b, moves[i].move, &undo);
             continue;
         }
@@ -350,11 +560,12 @@ static int16_t negamax(board_t *b, int8_t depth, int16_t alpha, int16_t beta,
     uint8_t tt_flag;
     uint16_t base;
     scored_move_t *moves;
-    uint8_t count, i;
+    uint8_t count, i, stage, cutoff;
     undo_t undo;
     uint8_t best_flag;
     move_t best_move;
     int8_t new_depth;
+    legal_info_t linfo;
 
     if (search_stopped) return 0;
     search_nodes++;
@@ -390,7 +601,8 @@ static int16_t negamax(board_t *b, int8_t depth, int16_t alpha, int16_t beta,
             tt_move = tt_unpack_move(tt_best_packed);
     }
 
-    in_check = is_square_attacked(b, b->king_sq[b->side], b->side ^ 1);
+    compute_legal_info(b, &linfo);
+    in_check = linfo.in_check;
 
     /* Check extension */
     if (in_check) depth++;
@@ -435,83 +647,95 @@ static int16_t negamax(board_t *b, int8_t depth, int16_t alpha, int16_t beta,
         }
     }
 
-    /* Generate all moves into pool */
-    count = generate_moves(b, raw_moves_buf, GEN_ALL);
-    base = move_sp;
-    if (base + count > MOVE_POOL_SIZE) return evaluate(b);
-    moves = &move_pool[base];
-    for (i = 0; i < count; i++) {
-        moves[i].move = raw_moves_buf[i];
-        moves[i].score = 0;
-    }
-    move_sp = base + count;
-    score_moves(b, moves, count, ply, tt_move);
-
     best_score = -SCORE_INF;
     best_flag = TT_ALPHA;
     best_move = MOVE_NONE;
     legal_moves = 0;
+    cutoff = 0;
 
-    for (i = 0; i < count; i++) {
-        pick_move(moves, count, i);
-        move_t m = moves[i].move;
+    /* Staged generation: captures first, then quiets. */
+    for (stage = 0; stage < 2 && !cutoff; stage++) {
+        uint8_t mode = (stage == 0) ? GEN_CAPTURES : GEN_QUIETS;
 
-        board_make(b, m, &undo);
-        if (!board_is_legal(b)) {
-            board_unmake(b, m, &undo);
-            continue;
+        count = generate_moves(b, raw_moves_buf, mode);
+        base = move_sp;
+        if (base + count > MOVE_POOL_SIZE) return evaluate(b);
+        moves = &move_pool[base];
+        for (i = 0; i < count; i++) {
+            moves[i].move = raw_moves_buf[i];
+            moves[i].score = 0;
         }
-        legal_moves++;
+        move_sp = base + count;
+        score_moves(b, moves, count, ply, tt_move);
 
-        /* Record position for repetition detection */
-        search_history_push(b->hash);
+        for (i = 0; i < count; i++) {
+            move_t m;
+            uint8_t need_legality_check;
 
-        /* Late move reductions */
-        new_depth = depth - 1;
-        if (!in_check && legal_moves > 4 && depth >= 3 &&
-            !(m.flags & FLAG_CAPTURE) && !(m.flags & FLAG_PROMOTION)) {
-            new_depth--;
-            /* Re-search at full depth if reduced search improves alpha */
-            score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1);
-            if (score > alpha && !search_stopped) {
-                new_depth = depth - 1;
+            pick_move(moves, count, i);
+            m = moves[i].move;
+            if (!is_evasion_candidate(b, &linfo, m))
+                continue;
+            need_legality_check = move_needs_legality_check(b, &linfo, m);
+
+            board_make(b, m, &undo);
+            if (need_legality_check && !board_is_legal(b)) {
+                board_unmake(b, m, &undo);
+                continue;
+            }
+            legal_moves++;
+
+            /* Record position for repetition detection */
+            search_history_push(b->hash);
+
+            /* Late move reductions */
+            new_depth = depth - 1;
+            if (!in_check && legal_moves > 4 && depth >= 3 &&
+                !(m.flags & FLAG_CAPTURE) && !(m.flags & FLAG_PROMOTION)) {
+                new_depth--;
+                /* Re-search at full depth if reduced search improves alpha */
+                score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1);
+                if (score > alpha && !search_stopped) {
+                    new_depth = depth - 1;
+                    score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1);
+                }
+            } else {
                 score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1);
             }
-        } else {
-            score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1);
-        }
 
-        search_history_pop();
-        board_unmake(b, m, &undo);
+            search_history_pop();
+            board_unmake(b, m, &undo);
 
-        if (search_stopped) { move_sp = base; return 0; }
+            if (search_stopped) { move_sp = base; return 0; }
 
-        if (score > best_score) {
-            best_score = score;
-            best_move = m;
+            if (score > best_score) {
+                best_score = score;
+                best_move = m;
 
-            if (ply == 0)
-                search_best_root_move = m;
+                if (ply == 0)
+                    search_best_root_move = m;
 
-            if (score > alpha) {
-                alpha = score;
-                best_flag = TT_EXACT;
+                if (score > alpha) {
+                    alpha = score;
+                    best_flag = TT_EXACT;
 
-                if (alpha >= beta) {
-                    best_flag = TT_BETA;
+                    if (alpha >= beta) {
+                        best_flag = TT_BETA;
 
-                    /* Update killers and history for quiet moves */
-                    if (!(m.flags & FLAG_CAPTURE)) {
-                        update_killers(ply, m);
-                        update_history(b->side, m, depth);
+                        /* Update killers and history for quiet moves */
+                        if (!(m.flags & FLAG_CAPTURE)) {
+                            update_killers(ply, m);
+                            update_history(b->side, m, depth);
+                        }
+                        cutoff = 1;
+                        break;
                     }
-                    break;
                 }
             }
         }
-    }
 
-    move_sp = base;
+        move_sp = base;
+    }
 
     /* Checkmate or stalemate */
     if (legal_moves == 0) {
