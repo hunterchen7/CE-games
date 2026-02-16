@@ -548,7 +548,7 @@ static int16_t quiescence(board_t *b, int16_t alpha, int16_t beta,
 /* ========== Negamax with Alpha-Beta ========== */
 
 static int16_t negamax(board_t *b, int8_t depth, int16_t alpha, int16_t beta,
-                       uint8_t ply, uint8_t do_null)
+                       uint8_t ply, uint8_t do_null, uint8_t ext)
 {
     int16_t score, best_score;
     uint8_t in_check;
@@ -566,6 +566,7 @@ static int16_t negamax(board_t *b, int8_t depth, int16_t alpha, int16_t beta,
     move_t best_move;
     int8_t new_depth;
     legal_info_t linfo;
+    uint8_t can_futility;
 
     if (search_stopped) return 0;
     search_nodes++;
@@ -604,8 +605,18 @@ static int16_t negamax(board_t *b, int8_t depth, int16_t alpha, int16_t beta,
     compute_legal_info(b, &linfo);
     in_check = linfo.in_check;
 
-    /* Check extension */
-    if (in_check) depth++;
+    /* Check extension — limited to 2 per search path */
+    if (in_check && ext < 2) { depth++; ext++; }
+
+    /* Futility pruning setup: at low depths, skip quiet moves
+       that have no chance of raising alpha */
+    can_futility = 0;
+    if (!in_check && depth <= 2 && ply > 0) {
+        int16_t static_eval = evaluate(b);
+        int16_t futility_margin = (depth == 1) ? 200 : 500;
+        if (static_eval + futility_margin <= alpha)
+            can_futility = 1;
+    }
 
     /* Null move pruning */
     if (do_null && !in_check && depth >= 3 && ply > 0) {
@@ -633,7 +644,7 @@ static int16_t negamax(board_t *b, int8_t depth, int16_t alpha, int16_t beta,
             b->ep_square = SQ_NONE;
 
             search_history_push(b->hash);
-            score = -negamax(b, depth - 1 - 2, -beta, -beta + 1, ply + 1, 0);
+            score = -negamax(b, depth - 1 - 2, -beta, -beta + 1, ply + 1, 0, ext);
             search_history_pop();
 
             /* Unmake null move */
@@ -676,6 +687,13 @@ static int16_t negamax(board_t *b, int8_t depth, int16_t alpha, int16_t beta,
             m = moves[i].move;
             if (!is_evasion_candidate(b, &linfo, m))
                 continue;
+
+            /* Futility pruning: skip quiet moves after at least one
+               legal move has been searched */
+            if (can_futility && legal_moves > 0 &&
+                !(m.flags & (FLAG_CAPTURE | FLAG_PROMOTION)))
+                continue;
+
             need_legality_check = move_needs_legality_check(b, &linfo, m);
 
             board_make(b, m, &undo);
@@ -694,19 +712,24 @@ static int16_t negamax(board_t *b, int8_t depth, int16_t alpha, int16_t beta,
             /* Record position for repetition detection */
             search_history_push(b->hash);
 
-            /* Late move reductions */
+            /* PVS + Late move reductions */
             new_depth = depth - 1;
-            if (!in_check && legal_moves > 4 && depth >= 3 &&
-                !(m.flags & FLAG_CAPTURE) && !(m.flags & FLAG_PROMOTION)) {
-                new_depth--;
-                /* Re-search at full depth if reduced search improves alpha */
-                score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1);
-                if (score > alpha && !search_stopped) {
-                    new_depth = depth - 1;
-                    score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1);
-                }
+            if (legal_moves == 1) {
+                /* First move: full window */
+                score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1, ext);
+            } else if (!in_check && legal_moves > 4 && depth >= 3 &&
+                       !(m.flags & FLAG_CAPTURE) && !(m.flags & FLAG_PROMOTION)) {
+                /* LMR: reduced null-window search */
+                score = -negamax(b, new_depth - 1, -alpha - 1, -alpha, ply + 1, 1, ext);
+                /* Re-search at full depth + full window if it beats alpha */
+                if (score > alpha && !search_stopped)
+                    score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1, ext);
             } else {
-                score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1);
+                /* PVS: null-window search */
+                score = -negamax(b, new_depth, -alpha - 1, -alpha, ply + 1, 1, ext);
+                /* Re-search with full window if it beats alpha but not beta */
+                if (score > alpha && score < beta && !search_stopped)
+                    score = -negamax(b, new_depth, -beta, -alpha, ply + 1, 1, ext);
             }
 
             search_history_pop();
@@ -801,8 +824,25 @@ search_result_t search_go(board_t *b, const search_limits_t *limits)
     result.nodes = 0;
 
     for (d = 1; d <= (int8_t)max_depth; d++) {
+        int16_t asp_alpha, asp_beta;
         search_best_root_move = MOVE_NONE;
-        score = negamax(b, d, -SCORE_INF, SCORE_INF, 0, 1);
+
+        /* Aspiration windows: narrow search around previous score */
+        if (d > 1 && result.best_move.from != SQ_NONE) {
+            asp_alpha = result.score - 25;
+            asp_beta  = result.score + 25;
+        } else {
+            asp_alpha = -SCORE_INF;
+            asp_beta  =  SCORE_INF;
+        }
+
+        score = negamax(b, d, asp_alpha, asp_beta, 0, 1, 0);
+
+        /* Re-search with full window on fail */
+        if (!search_stopped && (score <= asp_alpha || score >= asp_beta)) {
+            search_best_root_move = MOVE_NONE;
+            score = negamax(b, d, -SCORE_INF, SCORE_INF, 0, 1, 0);
+        }
 
         if (search_stopped) {
             /* If we timed out without finding ANY move yet (can happen
