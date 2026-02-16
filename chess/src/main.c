@@ -72,6 +72,7 @@
 
 typedef enum {
     STATE_MENU,
+    STATE_COLOR_SELECT,
     STATE_PLAYING,
     STATE_PROMOTION,
     STATE_GAMEOVER
@@ -129,6 +130,7 @@ static uint8_t game_over_reason; /* ENGINE_STATUS_* value */
 
 /* menu state */
 static int menu_cursor;
+static int color_cursor;       /* 0=White, 1=Black, 2=Random */
 
 /* keyboard */
 static uint8_t cur_g1, cur_g6, cur_g7;
@@ -708,11 +710,14 @@ static void start_game(void)
     anim_active = 0;
     game_over_reason = 0;
 
-    /* randomize player color in vs Computer mode */
-    if (game_mode == MODE_COMPUTER)
-        player_color = (rand() & 1) ? WHITE_TURN : BLACK_TURN;
-    else
+    /* set player color based on color_cursor selection */
+    if (game_mode == MODE_COMPUTER) {
+        if (color_cursor == 0)      player_color = WHITE_TURN;
+        else if (color_cursor == 1) player_color = BLACK_TURN;
+        else                        player_color = (rand() & 1) ? WHITE_TURN : BLACK_TURN;
+    } else {
         player_color = WHITE_TURN;
+    }
     board_flipped = (player_color == BLACK_TURN);
 
     /* if player is black, AI moves first */
@@ -733,8 +738,17 @@ static void update_menu(void)
 
     if ((new6 & kb_Enter) || (new1 & kb_2nd))
     {
-        game_mode = (menu_cursor == 0) ? MODE_HUMAN : MODE_COMPUTER;
-        start_game();
+        if (menu_cursor == 0)
+        {
+            game_mode = MODE_HUMAN;
+            start_game();
+        }
+        else
+        {
+            game_mode = MODE_COMPUTER;
+            color_cursor = 2; /* default to Random */
+            state = STATE_COLOR_SELECT;
+        }
         return;
     }
 
@@ -745,6 +759,89 @@ static void update_menu(void)
     }
 
     draw_menu();
+}
+
+/* ========== State: Color Select ========== */
+
+#define COLOR_ITEMS 3
+
+static void draw_color_select(void)
+{
+    int i, y, text_w, bar_x, bar_w;
+    const char *items[COLOR_ITEMS] = { "White", "Black", "Random" };
+
+    gfx_FillScreen(PAL_MENU_BG);
+
+    gfx_SetTextScale(2, 2);
+    gfx_SetTextFGColor(PAL_WHITE_PC);
+    text_w = gfx_GetStringWidth("Play as...");
+    gfx_PrintStringXY("Play as...", (SCREEN_W - text_w) / 2, 40);
+
+    /* decorative line */
+    gfx_SetColor(PAL_PIECE_OL);
+    gfx_HorizLine_NoClip(80, 62, 160);
+
+    gfx_SetTextScale(2, 2);
+
+    {
+        int max_w = 0;
+        int item_x;
+        for (i = 0; i < COLOR_ITEMS; i++)
+        {
+            text_w = gfx_GetStringWidth(items[i]);
+            if (text_w > max_w) max_w = text_w;
+        }
+        item_x = (SCREEN_W - max_w) / 2;
+
+        for (i = 0; i < COLOR_ITEMS; i++)
+        {
+            y = 80 + i * 36;
+            bar_w = max_w + 12;
+            bar_x = item_x - 6;
+
+            if (color_cursor == i)
+            {
+                gfx_SetColor(PAL_MENU_HL);
+                gfx_FillRectangle_NoClip(bar_x, y - 2, bar_w, 22);
+                gfx_SetTextFGColor(PAL_MENU_BG);
+            }
+            else
+            {
+                gfx_SetTextFGColor(PAL_TEXT);
+            }
+            gfx_PrintStringXY(items[i], item_x, y);
+        }
+    }
+
+    gfx_SetTextScale(1, 1);
+    gfx_SetTextFGColor(PAL_PIECE_OL);
+    gfx_PrintStringXY("arrows: move  enter: start  clear: back", 16, 222);
+
+    gfx_SwapDraw();
+}
+
+static void update_color_select(void)
+{
+    uint8_t new7 = cur_g7 & ~prev_g7;
+    uint8_t new6 = cur_g6 & ~prev_g6;
+    uint8_t new1 = cur_g1 & ~prev_g1;
+
+    if ((new7 & kb_Down) && color_cursor < COLOR_ITEMS - 1) color_cursor++;
+    if ((new7 & kb_Up) && color_cursor > 0) color_cursor--;
+
+    if ((new6 & kb_Enter) || (new1 & kb_2nd))
+    {
+        start_game();
+        return;
+    }
+
+    if (new6 & kb_Clear)
+    {
+        state = STATE_MENU;
+        return;
+    }
+
+    draw_color_select();
 }
 
 /* ========== State: Playing ========== */
@@ -1156,10 +1253,11 @@ int main(void)
 
         switch (state)
         {
-            case STATE_MENU:       update_menu();       break;
-            case STATE_PLAYING:    update_playing();     break;
-            case STATE_PROMOTION:  update_promotion();   break;
-            case STATE_GAMEOVER:   update_gameover();    break;
+            case STATE_MENU:         update_menu();          break;
+            case STATE_COLOR_SELECT: update_color_select();  break;
+            case STATE_PLAYING:      update_playing();       break;
+            case STATE_PROMOTION:    update_promotion();     break;
+            case STATE_GAMEOVER:     update_gameover();      break;
         }
 
         prev_g1 = cur_g1;
