@@ -33,7 +33,7 @@ const eval_profile_t *eval_profile_get(void) {
 /* ========== Phase Weights ========== */
 
 /* Pawn=0, Knight=1, Bishop=1, Rook=2, Queen=4, King=0 */
-const int16_t phase_weight[6] = { 0, 1, 1, 2, 4, 0 };
+const uint8_t phase_weight[6] = { 0, 1, 1, 2, 4, 0 };
 
 /* ========== Combined Material + PST Tables ========== */
 
@@ -582,7 +582,6 @@ int evaluate(const board_t *b)
     /* Tapered eval */
     phase = b->phase;
     if (phase > PHASE_MAX) phase = PHASE_MAX;
-    if (phase < 0) phase = 0;
 
     score = (mg * phase + eg * (PHASE_MAX - phase)) / PHASE_MAX;
 

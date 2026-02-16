@@ -14,7 +14,7 @@ extern const int16_t eg_table[6][64];
 /* Phase weight per piece type (0-based).
    Pawn=0, Knight=1, Bishop=1, Rook=2, Queen=4, King=0.
    Total starting phase = 24 (PHASE_MAX). */
-extern const int16_t phase_weight[6];
+extern const uint8_t phase_weight[6];
 
 #define PHASE_MAX 24
 
