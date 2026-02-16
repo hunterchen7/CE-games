@@ -22,7 +22,7 @@ typedef struct {
     /* incremental eval (material + PST combined) */
     int16_t  mg[2];              /* middlegame score per side */
     int16_t  eg[2];              /* endgame score per side */
-    int16_t  phase;              /* game phase (24=opening, 0=endgame) */
+    uint8_t  phase;              /* game phase (24=opening, 0=endgame) */
 } board_t;
 
 /* ========== Undo State ========== */

@@ -33,7 +33,7 @@ const eval_profile_t *eval_profile_get(void) {
 /* ========== Phase Weights ========== */
 
 /* Pawn=0, Knight=1, Bishop=1, Rook=2, Queen=4, King=0 */
-const int16_t phase_weight[6] = { 0, 1, 1, 2, 4, 0 };
+const uint8_t phase_weight[6] = { 0, 1, 1, 2, 4, 0 };
 
 /* ========== Combined Material + PST Tables ========== */
 
@@ -274,11 +274,11 @@ static void build_pawn_info(const board_t *b,
 
 /* ========== Main Evaluation ========== */
 
-int16_t evaluate(const board_t *b)
+int evaluate(const board_t *b)
 {
     static uint8_t pawn_atk[128];
-    int16_t mg, eg, phase;
-    int32_t score;
+    int mg, eg, phase;
+    int score;
     uint8_t i, sq, row, col, type;
     uint8_t w_pawns[8], b_pawns[8];
     EP_VARS;
@@ -582,10 +582,9 @@ int16_t evaluate(const board_t *b)
     /* Tapered eval */
     phase = b->phase;
     if (phase > PHASE_MAX) phase = PHASE_MAX;
-    if (phase < 0) phase = 0;
 
-    score = ((int32_t)mg * phase + (int32_t)eg * (PHASE_MAX - phase)) / PHASE_MAX;
+    score = (mg * phase + eg * (PHASE_MAX - phase)) / PHASE_MAX;
 
     /* Return from side-to-move perspective */
-    return (b->side == WHITE) ? (int16_t)score : (int16_t)(-score);
+    return (b->side == WHITE) ? score : -score;
 }
