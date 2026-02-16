@@ -80,6 +80,84 @@ Benchmarked on eZ80 @ 48 MHz (cycle-accurate emulator).
 | check_pin      | 85,302       | 7,572             | 15,200           | 135,134   |
 | bishop_count   | 85,302       | 7,572             | 15,262           | 125,530   |
 
+## 5s Search on eZ80 (50 positions)
+
+Searched each of 50 benchmark positions for 5 seconds on the eZ80 (48 MHz, cycle-accurate emulator).
+Post-optimization engine (commit `293b90d`, includes movegen optimizations).
+
+| Pos | Nodes | Depth |   ms | Pos | Nodes | Depth |   ms |
+| --- | ----: | ----: | ---: | --- | ----: | ----: | ---: |
+| P0  |   539 |     3 | 5903 | P25 |   690 |     1 | 8167 |
+| P1  |   509 |     1 | 5150 | P26 |  1111 |     2 | 7905 |
+| P2  |  2945 |     5 | 5885 | P27 |   835 |     1 | 8833 |
+| P3  |     0 |     0 | 5157 | P28 |   153 |     1 | 9000 |
+| P4  |  1132 |     3 | 6777 | P29 |   450 |     1 | 7888 |
+| P5  |   350 |     1 | 5137 | P30 |  2234 |     5 | 6685 |
+| P6  |  3222 |     6 | 6110 | P31 |  2665 |     6 | 6258 |
+| P7  |  3345 |     6 | 6036 | P32 |  1383 |     4 | 6612 |
+| P8  |  2382 |     5 | 5730 | P33 |  1511 |     4 | 5786 |
+| P9  |  3847 |     5 | 5760 | P34 |  2414 |     4 | 6418 |
+| P10 |  4035 |     5 | 5731 | P35 |   521 |     3 | 6912 |
+| P11 |   442 |     3 | 6462 | P36 |   562 |     2 | 6922 |
+| P12 |  1355 |     3 | 6699 | P37 |  1372 |     3 | 5349 |
+| P13 |   992 |     3 | 5169 | P38 |  1648 |     3 | 6871 |
+| P14 |  1771 |     3 | 5588 | P39 |  1024 |     0 | 5241 |
+| P15 |  1795 |     5 | 5083 | P40 |   742 |     3 | 7667 |
+| P16 |  1370 |     5 | 5377 | P41 |  3052 |     5 | 6257 |
+| P17 |  3370 |    11 | 5693 | P42 |   966 |     3 | 6307 |
+| P18 |  3442 |     6 | 5974 | P43 |  1537 |     3 | 5215 |
+| P19 |   219 |     1 | 5793 | P44 |  3662 |     5 | 5922 |
+| P20 |  4783 |     5 | 6089 | P45 |  1816 |     4 | 6186 |
+| P21 |   192 |     1 | 9007 | P46 |  2435 |     7 | 5276 |
+| P22 |  1871 |     5 | 5099 | P47 |  4792 |     7 | 6180 |
+| P23 |  3647 |     5 | 5749 | P48 |  1173 |     3 | 7028 |
+| P24 |  2101 |     5 | 5718 | P49 |  1698 |     3 | 5291 |
+
+- **Total: 90,102 nodes** across 50 positions
+- **Average: 1,802 nodes/position** in 5 seconds (~360 NPS)
+- Depth range: 0-11 (simple endgames reach d6-11, complex middlegames d1-3)
+- Time overshoot due to time check granularity (every 1024 nodes)
+
+## Tournament vs Stockfish
+
+### Node-limited (1800 nodes, 0.1s/move, XXL book)
+
+Simulates eZ80 playing strength (~1800 nodes per move based on 5s search bench).
+
+| SF Elo | W   | D   | L   | Score   | Pct | Elo diff |
+| ------ | --- | --- | --- | ------- | --- | -------- |
+| 1700   | 13  | 3   | 14  | 14.5/30 | 48% | -12      |
+| 1800   | 7   | 8   | 15  | 11.0/30 | 37% | -95      |
+| 1900   | 4   | 9   | 17  | 8.5/30  | 28% | -161     |
+| 2000   | 5   | 10  | 15  | 10.0/30 | 33% | -120     |
+| 2100   | 4   | 7   | 19  | 7.5/30  | 25% | -191     |
+
+**Estimated eZ80 Elo: ~1700** (50% mark vs SF-1700)
+
+### Unleashed (0.1s/move, no node limit, XXL book)
+
+Desktop Arm64 search strength — shows the engine's algorithmic ceiling. (m5 macbook pro)
+
+| SF Elo | W   | D   | L   | Score   | Pct | Elo diff |
+| ------ | --- | --- | --- | ------- | --- | -------- |
+| 1700   | 28  | 1   | 1   | 28.5/30 | 95% | +512     |
+| 1800   | 27  | 2   | 1   | 28.0/30 | 93% | +458     |
+| 1900   | 22  | 5   | 3   | 24.5/30 | 82% | +260     |
+| 2000   | 26  | 3   | 1   | 27.5/30 | 92% | +417     |
+| 2100   | 20  | 3   | 7   | 21.5/30 | 72% | +161     |
+| 2200   | 19  | 8   | 3   | 23.0/30 | 77% | +207     |
+| 2300   | 17  | 6   | 7   | 20.0/30 | 67% | +120     |
+| 2400   | 16  | 7   | 7   | 19.5/30 | 65% | +108     |
+| 2500   | 16  | 10  | 4   | 21.0/30 | 70% | +147     |
+| 2600   | 12  | 11  | 7   | 17.5/30 | 58% | +58      |
+| 2650   | 9   | 10  | 11  | 14.0/30 | 47% | -23      |
+| 2700   | 5   | 13  | 12  | 11.5/30 | 38% | -83      |
+| 2800   | 0   | 14  | 16  | 7.0/30  | 23% | -207     |
+| 2900   | 1   | 8   | 21  | 5.0/30  | 17% | -280     |
+| 3000   | 0   | 7   | 23  | 3.5/30  | 12% | -352     |
+
+**Estimated desktop Elo: ~2650** (50% mark between SF-2600 and SF-2700)
+
 ## Notes
 
 - **Staged movegen** shows no change in movegen/perft benchmarks because it only reorders moves (captures first, then quiets). The benefit is in alpha-beta search where it improves move ordering and pruning.
