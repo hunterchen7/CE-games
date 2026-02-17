@@ -238,7 +238,7 @@ static const int8_t bishop_offsets[] = { -17, -15, 15, 17 };
 #error "PAWN_CACHE_SIZE must be a power of two"
 #endif
 
-#define PAWN_CACHE_WAYS 2
+#define PAWN_CACHE_WAYS 4
 #if (PAWN_CACHE_SIZE % PAWN_CACHE_WAYS) != 0
 #error "PAWN_CACHE_SIZE must be divisible by PAWN_CACHE_WAYS"
 #endif
@@ -448,10 +448,14 @@ int evaluate(const board_t *b)
             slot = &set_slots[0];
         } else if (set_slots[1].key == b->pawn_hash) {
             slot = &set_slots[1];
+        } else if (set_slots[2].key == b->pawn_hash) {
+            slot = &set_slots[2];
+        } else if (set_slots[3].key == b->pawn_hash) {
+            slot = &set_slots[3];
         } else {
             uint8_t victim = pawn_cache_victim[set];
             slot = &set_slots[victim];
-            pawn_cache_victim[set] = (uint8_t)(victim ^ 1u);
+            pawn_cache_victim[set] = (uint8_t)((victim + 1u) & (PAWN_CACHE_WAYS - 1u));
             build_pawn_cache(b, slot);
         }
     }

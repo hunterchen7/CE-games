@@ -22,7 +22,8 @@ All comparisons below are full P0-P49 passes (same node total).
 | Step | Commit    | Change                                     | Nodes  | Total Cycles | Cy/Node | Eval Cycles  | Build Pawns Cycles | NPS (`n/ms`) |
 | ---- | --------- | ------------------------------------------ | ------ | ------------ | ------- | ------------ | ------------------ | ------------ |
 | 2    | `2ae29bf` | Streamline pawn-cache miss path            | 28,558 | 264,225,312  | 9,252   | 1,292,096,501 | 397,162,101        | 300.743      |
-| 3    | `(this step)` | 2-way set-associative pawn cache probing   | 28,558 | 226,390,038  | 7,927   | 1,254,261,218 | 353,252,767        | 303.263      |
+| 3    | `e0f1ebc` | 2-way set-associative pawn cache probing   | 28,558 | 226,390,038  | 7,927   | 1,254,261,218 | 353,252,767        | 303.263      |
+| 4    | `(this step)` | 4-way set-associative pawn cache probing   | 28,558 | 211,513,722  | 7,406   | 1,239,384,911 | 334,779,550        | 304.278      |
 
 Step 3 vs Step 2 deltas:
 
@@ -31,6 +32,14 @@ Step 3 vs Step 2 deltas:
 - `build_pawns` cycles: **-11.06%**
 - `eval` total cycles: **-2.93%**
 - throughput (`n/ms`): **+0.84%**
+
+Step 4 vs Step 3 deltas:
+
+- `total_cy`: **-6.57%**
+- `cy/node`: **-6.57%**
+- `build_pawns` cycles: **-5.23%**
+- `eval` total cycles: **-1.19%**
+- throughput (`n/ms`): **+0.33%**
 
 ## Texel Tuning Elo (Desktop Paired H2H)
 
