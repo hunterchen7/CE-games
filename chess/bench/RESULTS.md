@@ -23,7 +23,8 @@ All comparisons below are full P0-P49 passes (same node total).
 | ---- | --------- | ------------------------------------------ | ------ | ------------ | ------- | ------------ | ------------------ | ------------ |
 | 2    | `2ae29bf` | Streamline pawn-cache miss path            | 28,558 | 264,225,312  | 9,252   | 1,292,096,501 | 397,162,101        | 300.743      |
 | 3    | `e0f1ebc` | 2-way set-associative pawn cache probing   | 28,558 | 226,390,038  | 7,927   | 1,254,261,218 | 353,252,767        | 303.263      |
-| 4    | `(this step)` | 4-way set-associative pawn cache probing   | 28,558 | 211,513,722  | 7,406   | 1,239,384,911 | 334,779,550        | 304.278      |
+| 4    | `7495104` | 4-way set-associative pawn cache probing   | 28,558 | 211,513,722  | 7,406   | 1,239,384,911 | 334,779,550        | 304.278      |
+| 5    | `(this step)` | Qsearch capture-only scoring fast path      | 28,558 | 201,429,178  | 7,053   | 1,239,368,670 | 334,779,582        | 304.941      |
 
 Step 3 vs Step 2 deltas:
 
@@ -41,6 +42,14 @@ Step 4 vs Step 3 deltas:
 - `eval` total cycles: **-1.19%**
 - throughput (`n/ms`): **+0.33%**
 
+Step 5 vs Step 4 deltas:
+
+- `total_cy`: **-4.77%**
+- `cy/node`: **-4.77%**
+- `moveorder` cycles: **-1.68%**
+- `eval` total cycles: **-0.00%**
+- throughput (`n/ms`): **+0.22%**
+
 ### Desktop Cross-Check (Step 3 vs Step 4, 2026-02-17)
 
 Stockfish tournament settings:
@@ -55,6 +64,7 @@ Stockfish tournament settings:
 | ------- | --------- | ----- | ----- | ------------------- | --- |
 | Step 3  | `e0f1ebc` | 12-11-7 | 17.5/30 | +58.5 | `chess/engine/pgn/2026-02-17/tournament_step3_vs_sf2700_0p1_nolimit_30g.pgn` |
 | Step 4  | `7495104` | 10-10-10 | 15.0/30 | +0.0  | `chess/engine/pgn/2026-02-17/tournament_step4_vs_sf2700_0p1_nolimit_30g.pgn` |
+| Step 5  | `(this step)` | 8-14-8  | 15.0/30 | +0.0  | `chess/engine/pgn/2026-02-17/tournament_step5_vs_sf2700_0p1_nolimit_30g.pgn` |
 
 Desktop runtime spot-check (`build/bench`, 5 runs each, Avg row from "Time-Limited Search (50 pos)"):
 
@@ -65,6 +75,14 @@ Desktop runtime spot-check (`build/bench`, 5 runs each, Avg row from "Time-Limit
 | 100ms                       |     480,615 |     484,347 |                +0.78%   |
 
 Observed variance is non-trivial on desktop timing runs, but tournament strength in this sample favored Step 3.
+
+Step 5 desktop runtime spot-check (`build/bench`, 3 runs, compared vs Step 4 5-run mean):
+
+| Metric (nodes, 50-pos avg) | Step 4 mean | Step 5 mean | Delta (Step5 vs Step4) |
+| --------------------------- | ----------: | ----------: | ----------------------: |
+| 10ms                        |      51,193 |      53,071 |                +3.67%   |
+| 50ms                        |     239,578 |     255,223 |                +6.53%   |
+| 100ms                       |     484,347 |     486,720 |                +0.49%   |
 
 ## Texel Tuning Elo (Desktop Paired H2H)
 
