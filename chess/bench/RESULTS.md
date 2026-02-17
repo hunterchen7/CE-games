@@ -41,6 +41,31 @@ Step 4 vs Step 3 deltas:
 - `eval` total cycles: **-1.19%**
 - throughput (`n/ms`): **+0.33%**
 
+### Desktop Cross-Check (Step 3 vs Step 4, 2026-02-17)
+
+Stockfish tournament settings:
+
+- `stockfish` level: 2700
+- TC: `movetime=0.1s`
+- `NODE_LIMIT=0` build (`make uci CFLAGS='-Wall -Wextra -O2 -std=c11 -DNODE_LIMIT=0'`)
+- no opening book (`--no-book`)
+- 30 games per engine version
+
+| Variant | Commit    | W-D-L | Score | Est. Elo vs SF-2700 | PGN |
+| ------- | --------- | ----- | ----- | ------------------- | --- |
+| Step 3  | `e0f1ebc` | 12-11-7 | 17.5/30 | +58.5 | `chess/engine/pgn/2026-02-17/tournament_step3_vs_sf2700_0p1_nolimit_30g.pgn` |
+| Step 4  | `7495104` | 10-10-10 | 15.0/30 | +0.0  | `chess/engine/pgn/2026-02-17/tournament_step4_vs_sf2700_0p1_nolimit_30g.pgn` |
+
+Desktop runtime spot-check (`build/bench`, 5 runs each, Avg row from "Time-Limited Search (50 pos)"):
+
+| Metric (nodes, 50-pos avg) | Step 3 mean | Step 4 mean | Delta (Step4 vs Step3) |
+| --------------------------- | ----------: | ----------: | ----------------------: |
+| 10ms                        |      52,949 |      51,193 |                -3.32%   |
+| 50ms                        |     254,503 |     239,578 |                -5.86%   |
+| 100ms                       |     480,615 |     484,347 |                +0.78%   |
+
+Observed variance is non-trivial on desktop timing runs, but tournament strength in this sample favored Step 3.
+
 ## Texel Tuning Elo (Desktop Paired H2H)
 
 Paired match setup:
