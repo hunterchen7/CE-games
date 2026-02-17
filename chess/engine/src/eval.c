@@ -254,6 +254,9 @@ static pawn_cache_entry_t pawn_cache[PAWN_CACHE_SIZE];
 /* Build pawn-only derived data and scores once per pawn structure. */
 static void build_pawn_cache(const board_t *b, pawn_cache_entry_t *e)
 {
+    const uint8_t white_pawn = MAKE_PIECE(COLOR_WHITE, PIECE_PAWN);
+    const uint8_t black_pawn = MAKE_PIECE(COLOR_BLACK, PIECE_PAWN);
+    uint8_t w_sq[8], b_sq[8], wn = 0, bn = 0;
     uint8_t i, sq, row, col, piece, a;
     int16_t mg = 0;
     int16_t eg = 0;
@@ -269,6 +272,7 @@ static void build_pawn_cache(const board_t *b, pawn_cache_entry_t *e)
         if (PIECE_TYPE(piece) != PIECE_PAWN) continue;
         row = SQ_TO_ROW(sq);
         col = SQ_TO_COL(sq);
+        w_sq[wn++] = sq;
         e->w_pawns[col] |= (uint8_t)(1u << row);
         a = sq - 17; if (SQ_VALID(a)) e->pawn_atk[a] |= 1;
         a = sq - 15; if (SQ_VALID(a)) e->pawn_atk[a] |= 1;
@@ -281,20 +285,21 @@ static void build_pawn_cache(const board_t *b, pawn_cache_entry_t *e)
         if (PIECE_TYPE(piece) != PIECE_PAWN) continue;
         row = SQ_TO_ROW(sq);
         col = SQ_TO_COL(sq);
+        b_sq[bn++] = sq;
         e->b_pawns[col] |= (uint8_t)(1u << row);
         a = sq + 17; if (SQ_VALID(a)) e->pawn_atk[a] |= 2;
         a = sq + 15; if (SQ_VALID(a)) e->pawn_atk[a] |= 2;
     }
 
     /* White pawn structure terms */
-    for (i = 0; i < b->piece_count[WHITE]; i++) {
-        uint8_t rel_rank;
-        piece = b->squares[b->piece_list[WHITE][i]];
-        if (PIECE_TYPE(piece) != PIECE_PAWN) continue;
-        sq = b->piece_list[WHITE][i];
+    for (i = 0; i < wn; i++) {
+        uint8_t rel_rank, ri;
+        uint8_t ahead;
+        sq = w_sq[i];
         row = SQ_TO_ROW(sq);
         col = SQ_TO_COL(sq);
         rel_rank = 7 - row;
+        ri = rel_rank - 2;
 
 #ifndef NO_PAWNS
         if (e->w_pawns[col] & (uint8_t)~(1u << row)) {
@@ -314,47 +319,37 @@ static void build_pawn_cache(const board_t *b, pawn_cache_entry_t *e)
             uint8_t supported = 0;
             uint8_t s1 = sq + 17;
             uint8_t s2 = sq + 15;
-            if (SQ_VALID(s1) && b->squares[s1] == MAKE_PIECE(COLOR_WHITE, PIECE_PAWN)) supported = 1;
-            if (SQ_VALID(s2) && b->squares[s2] == MAKE_PIECE(COLOR_WHITE, PIECE_PAWN)) supported = 1;
-            if (supported && rel_rank >= 2 && rel_rank <= 7) {
-                uint8_t ri = rel_rank - 2;
-                if (ri < 6) {
-                    mg += connected_bonus_mg[ri];
-                    eg += connected_bonus_eg[ri];
-                }
+            if (SQ_VALID(s1) && b->squares[s1] == white_pawn) supported = 1;
+            if (SQ_VALID(s2) && b->squares[s2] == white_pawn) supported = 1;
+            if (supported && rel_rank >= 2) {
+                mg += connected_bonus_mg[ri];
+                eg += connected_bonus_eg[ri];
             }
         }
 #endif /* NO_PAWNS */
 
 #ifndef NO_PASSED
-        {
-            uint8_t passed = 1;
-            int8_t f;
-            uint8_t ahead = (uint8_t)((1u << row) - 1);
-            for (f = (int8_t)col - 1; f <= (int8_t)col + 1; f++) {
-                if (f < 0 || f > 7) continue;
-                if (e->b_pawns[f] & ahead) { passed = 0; break; }
-            }
-            if (passed && rel_rank >= 2) {
-                uint8_t ri = rel_rank - 2;
-                if (ri < 6) {
-                    mg += passed_mg[ri];
-                    eg += passed_eg[ri];
-                }
+        ahead = (uint8_t)((1u << row) - 1);
+        if (rel_rank >= 2) {
+            if (!(e->b_pawns[col] & ahead) &&
+                (col == 0 || !(e->b_pawns[col - 1] & ahead)) &&
+                (col == 7 || !(e->b_pawns[col + 1] & ahead))) {
+                mg += passed_mg[ri];
+                eg += passed_eg[ri];
             }
         }
 #endif /* NO_PASSED */
     }
 
     /* Black pawn structure terms */
-    for (i = 0; i < b->piece_count[BLACK]; i++) {
-        uint8_t rel_rank;
-        piece = b->squares[b->piece_list[BLACK][i]];
-        if (PIECE_TYPE(piece) != PIECE_PAWN) continue;
-        sq = b->piece_list[BLACK][i];
+    for (i = 0; i < bn; i++) {
+        uint8_t rel_rank, ri;
+        uint8_t ahead;
+        sq = b_sq[i];
         row = SQ_TO_ROW(sq);
         col = SQ_TO_COL(sq);
         rel_rank = row;
+        ri = rel_rank - 2;
 
 #ifndef NO_PAWNS
         if (e->b_pawns[col] & (uint8_t)~(1u << row)) {
@@ -374,33 +369,23 @@ static void build_pawn_cache(const board_t *b, pawn_cache_entry_t *e)
             uint8_t supported = 0;
             uint8_t s1 = sq - 17;
             uint8_t s2 = sq - 15;
-            if (SQ_VALID(s1) && b->squares[s1] == MAKE_PIECE(COLOR_BLACK, PIECE_PAWN)) supported = 1;
-            if (SQ_VALID(s2) && b->squares[s2] == MAKE_PIECE(COLOR_BLACK, PIECE_PAWN)) supported = 1;
-            if (supported && rel_rank >= 2 && rel_rank <= 7) {
-                uint8_t ri = rel_rank - 2;
-                if (ri < 6) {
-                    mg -= connected_bonus_mg[ri];
-                    eg -= connected_bonus_eg[ri];
-                }
+            if (SQ_VALID(s1) && b->squares[s1] == black_pawn) supported = 1;
+            if (SQ_VALID(s2) && b->squares[s2] == black_pawn) supported = 1;
+            if (supported && rel_rank >= 2) {
+                mg -= connected_bonus_mg[ri];
+                eg -= connected_bonus_eg[ri];
             }
         }
 #endif /* NO_PAWNS */
 
 #ifndef NO_PASSED
-        {
-            uint8_t passed = 1;
-            int8_t f;
-            uint8_t ahead = (uint8_t)(~((1u << (row + 1)) - 1));
-            for (f = (int8_t)col - 1; f <= (int8_t)col + 1; f++) {
-                if (f < 0 || f > 7) continue;
-                if (e->w_pawns[f] & ahead) { passed = 0; break; }
-            }
-            if (passed && rel_rank >= 2) {
-                uint8_t ri = rel_rank - 2;
-                if (ri < 6) {
-                    mg -= passed_mg[ri];
-                    eg -= passed_eg[ri];
-                }
+        ahead = (uint8_t)(~((1u << (row + 1)) - 1));
+        if (rel_rank >= 2) {
+            if (!(e->w_pawns[col] & ahead) &&
+                (col == 0 || !(e->w_pawns[col - 1] & ahead)) &&
+                (col == 7 || !(e->w_pawns[col + 1] & ahead))) {
+                mg -= passed_mg[ri];
+                eg -= passed_eg[ri];
             }
         }
 #endif /* NO_PASSED */
