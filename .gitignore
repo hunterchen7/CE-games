@@ -13,3 +13,10 @@ chess/piece_variants
 chess/references
 chess/engine/tuning/data/
 chess/engine/tuning/results/
+/chess/bench/obj/_../engine/src
+/chess/bench/obj
+*.pyc
+__pycache__/
+
+# Recordings / videos
+recordings/

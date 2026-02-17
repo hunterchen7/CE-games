@@ -6,6 +6,7 @@ Tournament: our engine vs Stockfish at multiple Elo levels.
 Usage:
   python3 tournament.py                         # default (uci binary, SF 2600-3000)
   python3 tournament.py --engine uci_4000 --elos 1700-2300 --pgn tournament_4000.pgn
+  python3 tournament.py --nodes 25000 --no-book --elos 1500-2000
 """
 
 import os
@@ -23,12 +24,16 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BUILD_DIR = os.path.join(BASE_DIR, "build")
 STOCKFISH = "/opt/homebrew/bin/stockfish"
 
-GAMES_PER_MATCH = 30
+GAMES_PER_MATCH = 30  # overridden by --games
 MOVETIME = 0.1
 MAX_WORKERS = 5
 
 print_lock = threading.Lock()
 pgn_lock = threading.Lock()
+
+# Set by main() based on --nodes flag
+LIMIT = None
+LIMIT_DESC = None
 
 
 def log(msg):
@@ -46,23 +51,23 @@ def play_game(our_path, our_args, sf_path, sf_elo, our_is_white):
     sf_eng = chess.engine.SimpleEngine.popen_uci(sf_path)
     sf_eng.configure({"Threads": 1, "UCI_LimitStrength": True, "UCI_Elo": sf_elo})
 
+    our_name = f"TI84Chess-{LIMIT_DESC}"
     if our_is_white:
         w_eng, b_eng = our_eng, sf_eng
-        game.headers["White"] = "TI84Chess-0.1s"
+        game.headers["White"] = our_name
         game.headers["Black"] = f"SF-{sf_elo}"
     else:
         w_eng, b_eng = sf_eng, our_eng
         game.headers["White"] = f"SF-{sf_elo}"
-        game.headers["Black"] = "TI84Chess-0.1s"
+        game.headers["Black"] = our_name
 
-    limit = chess.engine.Limit(time=MOVETIME)
     node = game
 
     try:
         while not board.is_game_over(claim_draw=True) and board.fullmove_number <= 200:
             eng = w_eng if board.turn == chess.WHITE else b_eng
             try:
-                result = eng.play(board, limit)
+                result = eng.play(board, LIMIT)
             except chess.engine.EngineTerminatedError:
                 game.headers["Result"] = "0-1" if board.turn == chess.WHITE else "1-0"
                 return game
@@ -102,6 +107,8 @@ def elo_diff(pct):
 
 
 def main():
+    global GAMES_PER_MATCH, LIMIT, LIMIT_DESC
+
     parser = argparse.ArgumentParser(description="TI84Chess vs Stockfish tournament")
     parser.add_argument("--engine", default="uci",
                         help="Engine binary name in build/ (default: uci)")
@@ -110,7 +117,11 @@ def main():
     parser.add_argument("--step", type=int, default=100,
                         help="Elo step size (default: 100)")
     parser.add_argument("--pgn", default=None,
-                        help="PGN output filename (default: tournament_<engine>.pgn)")
+                        help="PGN output filename (default: auto-generated)")
+    parser.add_argument("--games", type=int, default=None,
+                        help="Games per match (default: 30)")
+    parser.add_argument("--nodes", type=int, default=None,
+                        help="Node limit per move (overrides time limit)")
     parser.add_argument("--no-book", action="store_true",
                         help="Run without opening book")
     parser.add_argument("--book", default=None,
@@ -124,9 +135,28 @@ def main():
         book_path = args.book or os.path.join(BASE_DIR, "..", "books", "book_xxl.bin")
         OUR_ENGINE_ARGS = ["-book", book_path]
     elo_min, elo_max = map(int, args.elos.split("-"))
+    if args.games:
+        GAMES_PER_MATCH = args.games
     SF_ELOS = list(range(elo_min, elo_max + 1, args.step))
-    pgn_name = args.pgn or f"tournament_{args.engine}.pgn"
-    pgn_path = os.path.join(BASE_DIR, pgn_name)
+
+    # Set up search limit
+    if args.nodes:
+        LIMIT = chess.engine.Limit(nodes=args.nodes)
+        LIMIT_DESC = f"{args.nodes}n"
+    else:
+        LIMIT = chess.engine.Limit(time=MOVETIME)
+        LIMIT_DESC = f"{MOVETIME}s"
+
+    # PGN output path: pgn/<date>/<name>.pgn
+    today = datetime.date.today().strftime("%Y-%m-%d")
+    pgn_dir = os.path.join(BASE_DIR, "pgn", today)
+    os.makedirs(pgn_dir, exist_ok=True)
+    book_tag = "nobook" if args.no_book else "book"
+    if args.pgn:
+        pgn_name = args.pgn
+    else:
+        pgn_name = f"tournament_{args.engine}_{LIMIT_DESC}_{book_tag}_{elo_min}-{elo_max}_{GAMES_PER_MATCH}g.pgn"
+    pgn_path = os.path.join(pgn_dir, pgn_name)
 
     if not os.path.isfile(OUR_ENGINE):
         print(f"Missing engine: {OUR_ENGINE}")
@@ -136,10 +166,10 @@ def main():
         sys.exit(1)
 
     total = len(SF_ELOS) * GAMES_PER_MATCH
-    print(f"Tournament: TI84Chess ({args.engine}, 0.1s/move, XXL book) vs Stockfish")
+    print(f"Tournament: TI84Chess ({args.engine}, {LIMIT_DESC}/move, {book_tag}) vs Stockfish")
     print(f"SF levels: {SF_ELOS}")
     print(f"{GAMES_PER_MATCH} games per level = {total} total games")
-    print(f"Time control: {MOVETIME}s/move, {MAX_WORKERS} concurrent")
+    print(f"Concurrency: {MAX_WORKERS}")
     print()
 
     with open(pgn_path, "w"):
@@ -189,8 +219,9 @@ def main():
                 log(f"  ERROR SF-{elo}: {ex}")
 
     print(f"\nPGNs saved to: {pgn_path}")
+    title = f"TI84Chess ({args.engine}, {LIMIT_DESC}, {book_tag}) vs Stockfish"
     print(f"\n{'='*60}")
-    print(f"{'TOURNAMENT RESULTS — TI84Chess (' + args.engine + ', 0.1s) vs Stockfish':^60}")
+    print(f"{title:^60}")
     print(f"{'='*60}")
     print(f"  {'SF Elo':<10} {'W':>4} {'D':>4} {'L':>4}  {'Score':>8}  {'Pct':>6}  {'Elo diff':>10}")
     print(f"  {'-'*52}")
