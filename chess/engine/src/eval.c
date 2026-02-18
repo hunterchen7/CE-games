@@ -251,7 +251,7 @@ static const int8_t bishop_offsets[] = { -17, -15, 15, 17 };
 #define PAWN_CACHE_SET_MASK (PAWN_CACHE_SETS - 1)
 
 typedef struct {
-    uint32_t key;           /* board pawn_hash */
+    zhash_t  key;           /* board pawn_hash */
     int16_t pawn_mg;        /* pawn-only mg contribution (white - black) */
     int16_t pawn_eg;        /* pawn-only eg contribution (white - black) */
     uint8_t w_pawns[8];     /* [file] -> rank bitmask */

@@ -3,6 +3,14 @@
 
 #include <stdint.h>
 
+/* ========== Zobrist Hash Type ========== */
+
+/* On the eZ80, unsigned int is 24 bits (native word size).
+   XOR/shift on unsigned int compiles to single inline instructions,
+   while uint32_t operations require expensive library calls (__lxor).
+   24-bit hash + 16-bit lock = 40 bits of collision resistance. */
+typedef unsigned int zhash_t;
+
 /* ========== Piece Encoding ========== */
 
 #define PIECE_NONE    0

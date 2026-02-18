@@ -70,8 +70,8 @@ int8_t engine_to_ui_piece(uint8_t piece)
 /* Compute full Zobrist hash and lock from scratch for a board position. */
 static void board_compute_hash(board_t *b)
 {
-    uint32_t h = 0;
-    uint32_t ph = 0;
+    zhash_t h = 0;
+    zhash_t ph = 0;
     uint16_t l = 0;
     int sq;
     uint8_t piece, pidx, sq64;

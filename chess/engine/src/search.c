@@ -75,7 +75,7 @@ static int16_t history[2][128];
 
 /* Position history for repetition detection */
 #define MAX_GAME_PLY 512
-static uint32_t pos_history[MAX_GAME_PLY];
+static zhash_t pos_history[MAX_GAME_PLY];
 static uint16_t pos_history_count;
 static uint16_t pos_history_irreversible;
 
@@ -115,7 +115,7 @@ static move_t raw_moves_buf[MAX_MOVES];
 
 /* ========== Position History ========== */
 
-void search_history_push(uint32_t hash)
+void search_history_push(zhash_t hash)
 {
     if (pos_history_count < MAX_GAME_PLY)
         pos_history[pos_history_count++] = hash;
@@ -138,7 +138,7 @@ void search_history_set_irreversible(void)
     pos_history_irreversible = pos_history_count;
 }
 
-static uint8_t is_repetition(uint32_t hash)
+static uint8_t is_repetition(zhash_t hash)
 {
     int i;
     if (pos_history_count < 3) return 0;
@@ -766,7 +766,7 @@ static int negamax(board_t *b, int8_t depth, int alpha, int beta,
         if (has_pieces) {
             /* Make null move */
             uint8_t old_ep = b->ep_square;
-            uint32_t old_hash = b->hash;
+            zhash_t old_hash = b->hash;
             uint16_t old_lock = b->lock;
 
             /* Flip side, clear EP */
