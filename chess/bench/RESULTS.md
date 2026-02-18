@@ -14,6 +14,134 @@ Benchmarked on eZ80 @ 48 MHz (cycle-accurate emulator).
 | 4   | `0868f82` | Precompute check/pin info                  |
 | 5   | `b8d7cf9` | Track bishop counts incrementally          |
 
+## TI-84 CE Cycle Optimization Track (2026-02-17)
+
+50-position profile benchmark (`-- Profile 1000n (50 pos) --`) using the calc debug harness.
+All comparisons below are full P0-P49 passes (same node total).
+
+| Step | Commit    | Change                                     | Nodes  | Total Cycles | Cy/Node | Eval Cycles  | Build Pawns Cycles | NPS (`n/ms`) |
+| ---- | --------- | ------------------------------------------ | ------ | ------------ | ------- | ------------ | ------------------ | ------------ |
+| 2    | `2ae29bf` | Streamline pawn-cache miss path            | 28,558 | 264,225,312  | 9,252   | 1,292,096,501 | 397,162,101        | 300.743      |
+| 3    | `e0f1ebc` | 2-way set-associative pawn cache probing   | 28,558 | 226,390,038  | 7,927   | 1,254,261,218 | 353,252,767        | 303.263      |
+| 4    | `7495104` | 4-way set-associative pawn cache probing   | 28,558 | 211,513,722  | 7,406   | 1,239,384,911 | 334,779,550        | 304.278      |
+| 5    | `(this step)` | Qsearch capture-only scoring fast path      | 28,558 | 201,429,178  | 7,053   | 1,239,368,670 | 334,779,582        | 304.941      |
+
+Step 3 vs Step 2 deltas:
+
+- `total_cy`: **-14.32%**
+- `cy/node`: **-14.32%**
+- `build_pawns` cycles: **-11.06%**
+- `eval` total cycles: **-2.93%**
+- throughput (`n/ms`): **+0.84%**
+
+Step 4 vs Step 3 deltas:
+
+- `total_cy`: **-6.57%**
+- `cy/node`: **-6.57%**
+- `build_pawns` cycles: **-5.23%**
+- `eval` total cycles: **-1.19%**
+- throughput (`n/ms`): **+0.33%**
+
+Step 5 vs Step 4 deltas:
+
+- `total_cy`: **-4.77%**
+- `cy/node`: **-4.77%**
+- `moveorder` cycles: **-1.68%**
+- `eval` total cycles: **-0.00%**
+- throughput (`n/ms`): **+0.22%**
+
+### Step 5 vs Step 4 Per-Position Breakdown (P0-P49)
+
+Profile mode: `-- Profile 1000n (50 pos)`, same node cap per position (`max_nodes=1000`).
+
+| Pos | Step4 Nodes | Step4 ms | Step5 Nodes | Step5 ms | Delta ms (S5-S4) | Delta % |
+| --- | ----------: | -------: | ----------: | -------: | ----------------: | ------: |
+| P0 | 680 | 2909 | 680 | 2906 | -3 | -0.10% |
+| P1 | 738 | 3504 | 738 | 3496 | -8 | -0.23% |
+| P2 | 502 | 1559 | 502 | 1554 | -5 | -0.32% |
+| P3 | 1000 | 2820 | 1000 | 2814 | -6 | -0.21% |
+| P4 | 398 | 2625 | 398 | 2621 | -4 | -0.15% |
+| P5 | 864 | 3158 | 864 | 3150 | -8 | -0.25% |
+| P6 | 523 | 1334 | 523 | 1331 | -3 | -0.22% |
+| P7 | 645 | 1257 | 645 | 1254 | -3 | -0.24% |
+| P8 | 279 | 1225 | 279 | 1223 | -2 | -0.16% |
+| P9 | 606 | 1042 | 606 | 1040 | -2 | -0.19% |
+| P10 | 392 | 1036 | 392 | 1035 | -1 | -0.10% |
+| P11 | 293 | 1878 | 293 | 1874 | -4 | -0.21% |
+| P12 | 437 | 2163 | 437 | 2160 | -3 | -0.14% |
+| P13 | 54 | 1103 | 54 | 1101 | -2 | -0.18% |
+| P14 | 140 | 1315 | 140 | 1312 | -3 | -0.23% |
+| P15 | 223 | 1209 | 223 | 1207 | -2 | -0.17% |
+| P16 | 815 | 1299 | 815 | 1297 | -2 | -0.15% |
+| P17 | 970 | 1619 | 970 | 1617 | -2 | -0.12% |
+| P18 | 607 | 1368 | 607 | 1366 | -2 | -0.15% |
+| P19 | 931 | 2070 | 931 | 2066 | -4 | -0.19% |
+| P20 | 257 | 1299 | 257 | 1297 | -2 | -0.15% |
+| P21 | 307 | 3071 | 307 | 3064 | -7 | -0.23% |
+| P22 | 807 | 1268 | 807 | 1265 | -3 | -0.24% |
+| P23 | 419 | 1105 | 419 | 1103 | -2 | -0.18% |
+| P24 | 490 | 1245 | 490 | 1243 | -2 | -0.16% |
+| P25 | 1000 | 2644 | 1000 | 2638 | -6 | -0.23% |
+| P26 | 172 | 2542 | 172 | 2534 | -8 | -0.31% |
+| P27 | 970 | 2782 | 970 | 2774 | -8 | -0.29% |
+| P28 | 155 | 2943 | 155 | 2935 | -8 | -0.27% |
+| P29 | 705 | 2609 | 705 | 2602 | -7 | -0.27% |
+| P30 | 686 | 1611 | 686 | 1608 | -3 | -0.19% |
+| P31 | 590 | 1479 | 590 | 1477 | -2 | -0.14% |
+| P32 | 708 | 1676 | 708 | 1674 | -2 | -0.12% |
+| P33 | 785 | 2099 | 785 | 2094 | -5 | -0.24% |
+| P34 | 570 | 1404 | 570 | 1400 | -4 | -0.28% |
+| P35 | 330 | 1481 | 330 | 1477 | -4 | -0.27% |
+| P36 | 628 | 2366 | 628 | 2361 | -5 | -0.21% |
+| P37 | 436 | 1929 | 436 | 1923 | -6 | -0.31% |
+| P38 | 293 | 2101 | 293 | 2093 | -8 | -0.38% |
+| P39 | 1000 | 2869 | 1000 | 2862 | -7 | -0.24% |
+| P40 | 373 | 2303 | 373 | 2300 | -3 | -0.13% |
+| P41 | 351 | 1879 | 351 | 1875 | -4 | -0.21% |
+| P42 | 875 | 1932 | 875 | 1928 | -4 | -0.21% |
+| P43 | 888 | 1252 | 888 | 1250 | -2 | -0.16% |
+| P44 | 562 | 1523 | 562 | 1520 | -3 | -0.20% |
+| P45 | 656 | 1912 | 656 | 1907 | -5 | -0.26% |
+| P46 | 586 | 1347 | 586 | 1344 | -3 | -0.22% |
+| P47 | 699 | 1273 | 699 | 1271 | -2 | -0.16% |
+| P48 | 285 | 2329 | 285 | 2321 | -8 | -0.34% |
+| P49 | 878 | 1089 | 878 | 1087 | -2 | -0.18% |
+| Tot | 28558 | 93855 | 28558 | 93651 | -204 | -0.22% |
+
+### Desktop Cross-Check (Step 3 vs Step 4, 2026-02-17)
+
+Stockfish tournament settings:
+
+- `stockfish` level: 2700
+- TC: `movetime=0.1s`
+- `NODE_LIMIT=0` build (`make uci CFLAGS='-Wall -Wextra -O2 -std=c11 -DNODE_LIMIT=0'`)
+- no opening book (`--no-book`)
+- 30 games per engine version
+
+| Variant | Commit    | W-D-L | Score | Est. Elo vs SF-2700 | PGN |
+| ------- | --------- | ----- | ----- | ------------------- | --- |
+| Step 3  | `e0f1ebc` | 12-11-7 | 17.5/30 | +58.5 | `chess/engine/pgn/2026-02-17/tournament_step3_vs_sf2700_0p1_nolimit_30g.pgn` |
+| Step 4  | `7495104` | 10-10-10 | 15.0/30 | +0.0  | `chess/engine/pgn/2026-02-17/tournament_step4_vs_sf2700_0p1_nolimit_30g.pgn` |
+| Step 5  | `(this step)` | 8-14-8  | 15.0/30 | +0.0  | `chess/engine/pgn/2026-02-17/tournament_step5_vs_sf2700_0p1_nolimit_30g.pgn` |
+
+Desktop runtime spot-check (`build/bench`, 5 runs each, Avg row from "Time-Limited Search (50 pos)"):
+
+| Metric (nodes, 50-pos avg) | Step 3 mean | Step 4 mean | Delta (Step4 vs Step3) |
+| --------------------------- | ----------: | ----------: | ----------------------: |
+| 10ms                        |      52,949 |      51,193 |                -3.32%   |
+| 50ms                        |     254,503 |     239,578 |                -5.86%   |
+| 100ms                       |     480,615 |     484,347 |                +0.78%   |
+
+Observed variance is non-trivial on desktop timing runs, but tournament strength in this sample favored Step 3.
+
+Step 5 desktop runtime spot-check (`build/bench`, 3 runs, compared vs Step 4 5-run mean):
+
+| Metric (nodes, 50-pos avg) | Step 4 mean | Step 5 mean | Delta (Step5 vs Step4) |
+| --------------------------- | ----------: | ----------: | ----------------------: |
+| 10ms                        |      51,193 |      53,071 |                +3.67%   |
+| 50ms                        |     239,578 |     255,223 |                +6.53%   |
+| 100ms                       |     484,347 |     486,720 |                +0.49%   |
+
 ## Texel Tuning Elo (Desktop Paired H2H)
 
 Paired match setup:

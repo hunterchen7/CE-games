@@ -237,6 +237,38 @@ static void score_moves(const board_t *b, scored_move_t *moves, uint8_t count,
     }
 }
 
+/* Capture-only scoring used in quiescence (non-check nodes). */
+static void score_capture_moves(const board_t *b, scored_move_t *moves, uint8_t count)
+{
+    uint8_t i;
+    for (i = 0; i < count; i++) {
+        move_t m = moves[i].move;
+        int16_t score = SCORE_CAPTURE_BASE;
+
+        if (m.flags & FLAG_CAPTURE) {
+            uint8_t victim_type = PIECE_TYPE(b->squares[m.to]);
+            uint8_t attacker_type = PIECE_TYPE(b->squares[m.from]);
+
+            if (m.flags & FLAG_EN_PASSANT)
+                victim_type = PIECE_PAWN;
+
+            if (victim_type >= PIECE_PAWN && victim_type <= PIECE_KING &&
+                attacker_type >= PIECE_PAWN && attacker_type <= PIECE_KING) {
+                score += mvv_lva[victim_type - 1][attacker_type - 1];
+            }
+        }
+
+        if (m.flags & FLAG_PROMOTION) {
+            if ((m.flags & FLAG_PROMO_MASK) == FLAG_PROMO_Q)
+                score += 5000;
+            else
+                score += 1000;
+        }
+
+        moves[i].score = score;
+    }
+}
+
 /* Selection sort: swap best move to position 'index' */
 static void pick_move(scored_move_t *moves, uint8_t count, uint8_t index)
 {
@@ -601,7 +633,7 @@ static int quiescence(board_t *b, int alpha, int beta,
     }
     move_sp = base + count;
     PROF_B();
-    score_moves(b, moves, count, ply, MOVE_NONE);
+    score_capture_moves(b, moves, count);
     PROF_E(moveorder_cy);
 
     for (i = 0; i < count; i++) {
