@@ -537,12 +537,14 @@ int evaluate(const board_t *b)
                 uint8_t mob = 0, j;
                 for (j = 0; j < 4; j++) {
                     uint8_t dest = sq + bishop_offsets[j];
-                    while (SQ_VALID(dest)) {
-                        uint8_t occ = b->squares[dest];
-                        if (occ != PIECE_NONE && IS_WHITE(occ)) break;
+                    uint8_t occ;
+                    while ((occ = b->squares[dest]) == PIECE_NONE) {
                         if (!(pawn_atk[dest] & 2)) mob++;
-                        if (occ != PIECE_NONE) break;
                         dest += bishop_offsets[j];
+                    }
+                    /* Stopped on piece or off-board sentinel */
+                    if (SQ_VALID(dest) && !IS_WHITE(occ)) {
+                        if (!(pawn_atk[dest] & 2)) mob++;
                     }
                 }
                 if (mob > 13) mob = 13;
@@ -574,12 +576,14 @@ int evaluate(const board_t *b)
                 uint8_t mob = 0, j;
                 for (j = 0; j < 4; j++) {
                     uint8_t dest = sq + bishop_offsets[j];
-                    while (SQ_VALID(dest)) {
-                        uint8_t occ = b->squares[dest];
-                        if (occ != PIECE_NONE && IS_BLACK(occ)) break;
+                    uint8_t occ;
+                    while ((occ = b->squares[dest]) == PIECE_NONE) {
                         if (!(pawn_atk[dest] & 1)) mob++;
-                        if (occ != PIECE_NONE) break;
                         dest += bishop_offsets[j];
+                    }
+                    /* Stopped on piece or off-board sentinel */
+                    if (SQ_VALID(dest) && !IS_BLACK(occ)) {
+                        if (!(pawn_atk[dest] & 1)) mob++;
                     }
                 }
                 if (mob > 13) mob = 13;

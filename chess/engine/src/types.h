@@ -14,6 +14,7 @@ typedef unsigned int zhash_t;
 /* ========== Piece Encoding ========== */
 
 #define PIECE_NONE    0
+#define OFFBOARD      0xFF   /* sentinel in off-board squares[]; non-zero, invalid type */
 #define PIECE_PAWN    1
 #define PIECE_KNIGHT  2
 #define PIECE_BISHOP  3

@@ -402,38 +402,38 @@ static void compute_legal_info(const board_t *b, legal_info_t *li)
         int8_t dir = atk_ray_offsets[i];
         uint8_t pinned_sq = SQ_NONE;
         uint8_t is_orth = (dir == -16 || dir == -1 || dir == 1 || dir == 16);
+        uint8_t p;
 
+        /* Walk empty squares (sentinel stops at off-board) */
         target = king_sq + dir;
-        while (SQ_VALID(target)) {
-            uint8_t p = b->squares[target];
-            if (p == PIECE_NONE) {
-                target += dir;
-                continue;
-            }
+        while (b->squares[target] == PIECE_NONE) target += dir;
 
-            if (PIECE_COLOR(p) == attacker_color) {
-                uint8_t type = PIECE_TYPE(p);
-                uint8_t slider = is_orth ?
-                    (type == PIECE_ROOK || type == PIECE_QUEEN) :
-                    (type == PIECE_BISHOP || type == PIECE_QUEEN);
+        /* First non-empty: real piece or off-board sentinel? */
+        if (!SQ_VALID(target)) continue;
+        p = b->squares[target];
 
-                if (slider) {
-                    if (pinned_sq == SQ_NONE) {
-                        add_checker(li, target);
-                    } else if (li->pinned_count < 8) {
-                        li->pinned_sq[li->pinned_count++] = pinned_sq;
-                    }
-                }
-                break;
-            }
-
-            /* Friendly piece blocks ray; first one may be pinned. */
-            if (pinned_sq == SQ_NONE)
-                pinned_sq = target;
-            else
-                break;
-
+        if (PIECE_COLOR(p) != attacker_color) {
+            /* Friendly piece — could be pinned. Keep walking. */
+            pinned_sq = target;
             target += dir;
+            while (b->squares[target] == PIECE_NONE) target += dir;
+            if (!SQ_VALID(target)) continue;
+            p = b->squares[target];
+        }
+
+        if (PIECE_COLOR(p) == attacker_color) {
+            uint8_t type = PIECE_TYPE(p);
+            uint8_t slider = is_orth ?
+                (type == PIECE_ROOK || type == PIECE_QUEEN) :
+                (type == PIECE_BISHOP || type == PIECE_QUEEN);
+
+            if (slider) {
+                if (pinned_sq == SQ_NONE) {
+                    add_checker(li, target);
+                } else if (li->pinned_count < 8) {
+                    li->pinned_sq[li->pinned_count++] = pinned_sq;
+                }
+            }
         }
     }
 }

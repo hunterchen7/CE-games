@@ -111,10 +111,17 @@ static void board_compute_hash(board_t *b)
 
 void board_init(board_t *b)
 {
+    uint8_t i;
     if (!zobrist_is_initialized())
         zobrist_init(0);
 
     memset(b, 0, sizeof(board_t));
+    /* Fill all off-board squares with sentinel so sliding loops
+       stop without needing SQ_VALID per iteration */
+    for (i = 0; i < 128; i++) {
+        if (i & 0x88) b->squares[i] = OFFBOARD;
+    }
+    memset(b->squares + 128, OFFBOARD, 128);
     memset(b->piece_index, PLIST_INVALID, sizeof(b->piece_index));
     b->ep_square = SQ_NONE;
     b->king_sq[WHITE] = SQ_NONE;
