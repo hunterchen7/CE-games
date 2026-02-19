@@ -73,8 +73,8 @@ static move_t killers[MAX_PLY][2];
 /* History heuristic: history[side][to_sq88] */
 static int16_t history[2][128];
 
-/* Position history for repetition detection */
-#define MAX_GAME_PLY 512
+/* Position history for repetition detection (256 half-moves = 128 full moves) */
+#define MAX_GAME_PLY 256
 static zhash_t pos_history[MAX_GAME_PLY];
 static uint16_t pos_history_count;
 static uint16_t pos_history_irreversible;
