@@ -459,7 +459,9 @@ static void draw_sidebar(void)
         gfx_PrintStringXY("vs. Human", SIDEBAR_X + 4, 6);
     } else {
         char cpu_buf[12];
-        sprintf(cpu_buf, "vs. CPU %d", difficulty_cursor + 1);
+        strcpy(cpu_buf, "vs. CPU ");
+        cpu_buf[8] = '1' + difficulty_cursor;
+        cpu_buf[9] = '\0';
         gfx_PrintStringXY(cpu_buf, SIDEBAR_X + 4, 6);
     }
 
@@ -725,7 +727,8 @@ static void draw_menu(void)
         if (!tag[0]) { h = ti_Open("CHBL01", "r"); if (h) { ti_Close(h); tag = " L"; } }
         if (!tag[0]) { h = ti_Open("CHBM01", "r"); if (h) { ti_Close(h); tag = " M"; } }
         if (!tag[0]) { h = ti_Open("CHBS01", "r"); if (h) { ti_Close(h); tag = " S"; } }
-        sprintf(ver_buf, "v%s%s", VERSION, tag);
+        strcpy(ver_buf, "v" VERSION);
+        strcat(ver_buf, tag);
         gfx_SetTextScale(1, 1);
         gfx_SetTextFGColor(PAL_PIECE_OL);
         text_w = gfx_GetStringWidth(ver_buf);
