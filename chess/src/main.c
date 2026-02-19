@@ -537,7 +537,6 @@ static void draw_playing(void)
 
 static const int8_t promo_pieces_white[4] = { W_QUEEN, W_ROOK, W_BISHOP, W_KNIGHT };
 static const int8_t promo_pieces_black[4] = { B_QUEEN, B_ROOK, B_BISHOP, B_KNIGHT };
-static const char *promo_labels[4] = { "Q", "R", "B", "N" };
 
 static void draw_promotion(void)
 {
@@ -587,9 +586,6 @@ static void draw_promotion(void)
 
         /* draw the piece */
         draw_piece(pieces[i], px, by + 2);
-
-        /* label below (unused, piece is self-explanatory) */
-        (void)promo_labels;
     }
 }
 
