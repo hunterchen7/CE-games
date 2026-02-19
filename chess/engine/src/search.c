@@ -61,23 +61,15 @@ static const uint8_t mvv_lva[6][6] = {
 
 /* ========== Move Ordering Scores ========== */
 
-#define SCORE_TT_MOVE      30000
+#define SCORE_TT_MOVE     30000
 #define SCORE_CAPTURE_BASE 10000
-#define SCORE_KILLER_1      9000
-#define SCORE_COUNTER       8500
-#define SCORE_KILLER_2      8000
+#define SCORE_KILLER_1     9000
+#define SCORE_KILLER_2     8000
 
 /* ========== Search State ========== */
 
 /* Killer moves: 2 per ply */
 static move_t killers[MAX_PLY][2];
-
-/* Counter-move heuristic: best response to opponent's last move.
-   Indexed by destination square of opponent's move. */
-static move_t counter_moves[128];
-
-/* Track moves played at each ply for counter-move lookup */
-static move_t ply_moves[MAX_PLY];
 
 /* History heuristic: history[side][to_sq88] */
 static int16_t history[2][128];
@@ -206,10 +198,7 @@ void search_init(void)
     for (i = 0; i < MAX_PLY; i++) {
         killers[i][0] = MOVE_NONE;
         killers[i][1] = MOVE_NONE;
-        ply_moves[i] = MOVE_NONE;
     }
-    for (i = 0; i < 128; i++)
-        counter_moves[i] = MOVE_NONE;
     for (i = 0; i < 2; i++)
         for (j = 0; j < 128; j++)
             history[i][j] = 0;
@@ -218,7 +207,7 @@ void search_init(void)
 /* ========== Move Scoring ========== */
 
 static void score_moves(const board_t *b, scored_move_t *moves, uint8_t count,
-                        uint8_t ply, move_t tt_move, move_t counter_move)
+                        uint8_t ply, move_t tt_move)
 {
     uint8_t i;
     for (i = 0; i < count; i++) {
@@ -252,8 +241,6 @@ static void score_moves(const board_t *b, scored_move_t *moves, uint8_t count,
             }
         } else if (ply < MAX_PLY && MOVE_EQ(m, killers[ply][0])) {
             moves[i].score = SCORE_KILLER_1;
-        } else if (MOVE_EQ(m, counter_move)) {
-            moves[i].score = SCORE_COUNTER;
         } else if (ply < MAX_PLY && MOVE_EQ(m, killers[ply][1])) {
             moves[i].score = SCORE_KILLER_2;
         } else {
@@ -595,12 +582,7 @@ static int quiescence(board_t *b, int alpha, int beta,
         }
         move_sp = base + count;
         PROF_B();
-        {
-            move_t counter_move = MOVE_NONE;
-            if (ply > 0 && ply_moves[ply - 1].from != 0)
-                counter_move = counter_moves[ply_moves[ply - 1].to];
-            score_moves(b, moves, count, ply, MOVE_NONE, counter_move);
-        }
+        score_moves(b, moves, count, ply, MOVE_NONE);
         PROF_E(moveorder_cy);
 
         /* Keep caller's alpha bound (do NOT reset to -SCORE_INF) */
@@ -852,12 +834,7 @@ static int negamax(board_t *b, int8_t depth, int alpha, int beta,
         }
         move_sp = base + count;
         PROF_B();
-        {
-            move_t counter_move = MOVE_NONE;
-            if (ply > 0 && ply_moves[ply - 1].from != 0)
-                counter_move = counter_moves[ply_moves[ply - 1].to];
-            score_moves(b, moves, count, ply, tt_move, counter_move);
-        }
+        score_moves(b, moves, count, ply, tt_move);
         PROF_E(moveorder_cy);
 
         for (i = 0; i < count; i++) {
@@ -904,10 +881,6 @@ static int negamax(board_t *b, int8_t depth, int alpha, int beta,
 
             /* Record position for repetition detection */
             search_history_push(b->hash);
-
-            /* Track move for counter-move heuristic */
-            if (ply < MAX_PLY)
-                ply_moves[ply] = m;
 
             /* PVS + Late move reductions.
                At root with move_variance: widen PVS window by variance cp
@@ -983,13 +956,10 @@ static int negamax(board_t *b, int8_t depth, int alpha, int beta,
                     if (alpha >= beta) {
                         best_flag = TT_BETA;
 
-                        /* Update killers, history, and counter-move for quiet moves */
+                        /* Update killers and history for quiet moves */
                         if (!(m.flags & FLAG_CAPTURE)) {
                             update_killers(ply, m);
                             update_history(b->side, m, depth);
-                            /* Update counter-move if opponent made a move */
-                            if (ply > 0 && ply_moves[ply - 1].from != 0)
-                                counter_moves[ply_moves[ply - 1].to] = m;
                         }
                         cutoff = 1;
                         break;
