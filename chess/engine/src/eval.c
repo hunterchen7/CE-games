@@ -195,9 +195,8 @@ const int16_t eg_table[6][64] = {
 #define ISOLATED_MG  12
 #define ISOLATED_EG  17
 
-/* Connected pawn bonus by relative rank (2nd..7th) */
-static const int16_t connected_bonus_mg[] = { 0, 9, 10, 16, 39, 65 };
-static const int16_t connected_bonus_eg[] = { 0, 9, 10, 16, 39, 65 };
+/* Connected pawn bonus by relative rank (2nd..7th) - same for mg and eg */
+static const int16_t connected_bonus[] = { 0, 9, 10, 16, 39, 65 };
 
 /* Passed pawn bonus: mg = 20*rr, eg = 10*(rr+r+1) where r=relrank-2, rr=r*(r-1) */
 /* Precomputed for relative ranks 2..7 (index 0..5) */
@@ -333,8 +332,8 @@ static void build_pawn_cache(const board_t *b, pawn_cache_entry_t *e)
             if (SQ_VALID(s1) && b->squares[s1] == white_pawn) supported = 1;
             if (SQ_VALID(s2) && b->squares[s2] == white_pawn) supported = 1;
             if (supported && rel_rank >= 2) {
-                mg += connected_bonus_mg[ri];
-                eg += connected_bonus_eg[ri];
+                mg += connected_bonus[ri];
+                eg += connected_bonus[ri];
             }
         }
 #endif /* NO_PAWNS */
@@ -383,8 +382,8 @@ static void build_pawn_cache(const board_t *b, pawn_cache_entry_t *e)
             if (SQ_VALID(s1) && b->squares[s1] == black_pawn) supported = 1;
             if (SQ_VALID(s2) && b->squares[s2] == black_pawn) supported = 1;
             if (supported && rel_rank >= 2) {
-                mg -= connected_bonus_mg[ri];
-                eg -= connected_bonus_eg[ri];
+                mg -= connected_bonus[ri];
+                eg -= connected_bonus[ri];
             }
         }
 #endif /* NO_PAWNS */
