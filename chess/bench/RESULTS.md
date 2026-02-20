@@ -1155,3 +1155,59 @@ evaluate() call for mobility, build_pawns, pieces (rook files), pawn shield sub-
   pieces and complex pawn structures.
 - **build_pawns has huge variance** — 3.8K to 48K cy/eval depending on pawn cache hit rate.
   Complex middlegames with many pawn structures thrash the 16-entry cache.
+
+## SoA Move Pool Optimization (2026-02-19)
+
+**Commit**: 8d8a550
+
+Replaced the array-of-structs `scored_move_t move_pool[]` with struct-of-arrays layout
+(`move_t pool_moves[]` + `int16_t pool_scores[]`). Eliminated the intermediate
+`raw_moves_buf[]` temp buffer — `generate_moves()` now writes directly into the pool.
+
+### Before (AoS with temp buffer copy)
+```
+Category             Cycles   Pct
+-------------- ------------ -----
+eval             3315248345   31%
+movegen          1823834523   17%
+make/unmake      1576642778   15%
+is_legal          226823663    2%
+legal_info       1027816018    9%
+moveorder        1062426567   10%
+tt                 34705006    0%
+null_move           1099846    0%
+pool_copy         216440657    2%   ← per-node copy loop
+overhead         1179008710   11%
+──────────────────────────────────
+Total:          10464046113  100%
+cy/node:            200930
+```
+
+### After (SoA with direct generation)
+```
+Category             Cycles   Pct
+-------------- ------------ -----
+eval             3315248345   32%
+movegen          1844895155   17%  ← +21M (+1.2%)
+make/unmake      1576642755   15%
+is_legal          226823663    2%
+legal_info       1027816018    9%
+moveorder        1146262088   11%  ← +84M (+7.9%)
+tt                 34705006    0%
+null_move           1099846    0%
+pool_copy                 0    0%  ← eliminated
+overhead         1177657640   11%
+──────────────────────────────────
+Total:          10351150516  100%
+cy/node:            198762
+```
+
+### Impact
+- **cy/node**: 200,930 → 198,762 (**-1.08%**)
+- **pool_copy**: 216M cycles → 0 (eliminated)
+- **moveorder**: +84M (+7.9%) — SoA swap overhead in `pick_move()` (4 assignments vs 1 struct)
+- **movegen**: +21M (+1.2%) — slight overhead from direct pool writes vs temp buffer
+- **Binary**: -95 bytes (chess), -420 bytes (bench)
+- **BSS**: -768 bytes (raw_moves_buf eliminated)
+
+Net savings: 216M - 84M - 21M = **111M cycles saved** across all 100 positions.
