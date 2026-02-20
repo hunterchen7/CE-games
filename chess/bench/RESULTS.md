@@ -1211,3 +1211,29 @@ cy/node:            198762
 - **BSS**: -768 bytes (raw_moves_buf eliminated)
 
 Net savings: 216M - 84M - 21M = **111M cycles saved** across all 100 positions.
+
+## Zobrist Lookup Caching + plist inline (2026-02-19)
+
+Cached `zobrist_piece[pidx][sq64]` into a local `zhash_t zh` variable wherever the same
+lookup fed both `b->hash` and `b->pawn_hash` (5 sites in `make_move`, 1 in promotion).
+Also marked `plist_move`/`plist_remove` as `static inline`.
+
+### Impact
+
+- **make/unmake**: 1,576,642,755 → 1,576,623,705 (**-19,050 cycles** at 1k nodes)
+- **make/unmake at 2k nodes**: 3,140,292,161 → 3,140,249,826 (**-42,335 cycles**, scales linearly)
+- **cy/node**: 198,762 → 198,762 (rounds to zero — 0.001% improvement)
+- **Binary**: 57,212 → 57,211 bytes (-1 byte)
+- **Regressions**: zero — all 100 positions either improved or unchanged
+
+The savings are deterministic and real: 24 of 100 positions show strictly fewer
+make/unmake cycles, the other 76 are identical. LTO already CSEs most of the
+duplicate lookups; only pawn-capture paths (where the `if (type == PIECE_PAWN)`
+conditional prevents the optimizer from proving the two loads are redundant)
+see any benefit.
+
+The `plist_move`/`plist_remove` inline hint had **0% effect** — LTO was already
+inlining both. Left in for documentation with a note.
+
+This is, quantifiably, the smallest optimization in the history of this engine.
+We measured it anyway.

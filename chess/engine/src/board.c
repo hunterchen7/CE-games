@@ -156,8 +156,9 @@ static void board_add_piece(board_t *b, uint8_t sq, uint8_t piece)
 }
 
 /* Remove a piece from the piece list (swap with last).
-   Does NOT clear squares[] — caller must handle that. */
-static void plist_remove(board_t *b, uint8_t side, uint8_t sq)
+   Does NOT clear squares[] — caller must handle that.
+   Note: LTO already inlines these; inline keyword has 0% bench impact. */
+static inline void plist_remove(board_t *b, uint8_t side, uint8_t sq)
 {
     uint8_t idx = b->piece_index[sq];
     uint8_t last_idx;
@@ -176,8 +177,7 @@ static void plist_remove(board_t *b, uint8_t side, uint8_t sq)
     b->piece_index[sq] = PLIST_INVALID;
 }
 
-/* Update piece list: change a piece's square from old_sq to new_sq. */
-static void plist_move(board_t *b, uint8_t side, uint8_t old_sq, uint8_t new_sq)
+static inline void plist_move(board_t *b, uint8_t side, uint8_t old_sq, uint8_t new_sq)
 {
     uint8_t idx = b->piece_index[old_sq];
 
@@ -278,10 +278,13 @@ void board_make(board_t *b, move_t m, undo_t *u)
         b->halfmove++;
 
     /* Remove piece from origin (hash + eval) */
-    b->hash ^= zobrist_piece[pidx][from64];
-    b->lock ^= lock_piece[pidx][from64];
-    if (type == PIECE_PAWN)
-        b->pawn_hash ^= zobrist_piece[pidx][from64];
+    {
+        zhash_t zh = zobrist_piece[pidx][from64];
+        b->hash ^= zh;
+        b->lock ^= lock_piece[pidx][from64];
+        if (type == PIECE_PAWN)
+            b->pawn_hash ^= zh;
+    }
     b->mg[side] -= mg_table[eidx][pst_from];
     b->eg[side] -= eg_table[eidx][pst_from];
 
@@ -297,10 +300,13 @@ void board_make(board_t *b, move_t m, undo_t *u)
             uint8_t cap_eidx = EVAL_INDEX(PIECE_TYPE(cap_piece));
             uint8_t cap_pst = (opp == WHITE) ? cap64 : PST_FLIP(cap64);
 
-            b->hash ^= zobrist_piece[cap_pidx][cap64];
-            b->lock ^= lock_piece[cap_pidx][cap64];
-            if (PIECE_TYPE(cap_piece) == PIECE_PAWN)
-                b->pawn_hash ^= zobrist_piece[cap_pidx][cap64];
+            {
+                zhash_t zh = zobrist_piece[cap_pidx][cap64];
+                b->hash ^= zh;
+                b->lock ^= lock_piece[cap_pidx][cap64];
+                if (PIECE_TYPE(cap_piece) == PIECE_PAWN)
+                    b->pawn_hash ^= zh;
+            }
             b->mg[opp] -= mg_table[cap_eidx][cap_pst];
             b->eg[opp] -= eg_table[cap_eidx][cap_pst];
             b->phase -= phase_weight[cap_eidx];
@@ -320,10 +326,13 @@ void board_make(board_t *b, move_t m, undo_t *u)
         uint8_t cap_eidx = EVAL_INDEX(PIECE_TYPE(captured));
         uint8_t cap_pst = (opp == WHITE) ? to64 : PST_FLIP(to64);
 
-        b->hash ^= zobrist_piece[cap_pidx][to64];
-        b->lock ^= lock_piece[cap_pidx][to64];
-        if (PIECE_TYPE(captured) == PIECE_PAWN)
-            b->pawn_hash ^= zobrist_piece[cap_pidx][to64];
+        {
+            zhash_t zh = zobrist_piece[cap_pidx][to64];
+            b->hash ^= zh;
+            b->lock ^= lock_piece[cap_pidx][to64];
+            if (PIECE_TYPE(captured) == PIECE_PAWN)
+                b->pawn_hash ^= zh;
+        }
         b->mg[opp] -= mg_table[cap_eidx][cap_pst];
         b->eg[opp] -= eg_table[cap_eidx][cap_pst];
         b->phase -= phase_weight[cap_eidx];
@@ -341,10 +350,13 @@ void board_make(board_t *b, move_t m, undo_t *u)
     plist_move(b, side, from, to);
 
     /* Place piece at destination (hash + eval) */
-    b->hash ^= zobrist_piece[pidx][to64];
-    b->lock ^= lock_piece[pidx][to64];
-    if (type == PIECE_PAWN)
-        b->pawn_hash ^= zobrist_piece[pidx][to64];
+    {
+        zhash_t zh = zobrist_piece[pidx][to64];
+        b->hash ^= zh;
+        b->lock ^= lock_piece[pidx][to64];
+        if (type == PIECE_PAWN)
+            b->pawn_hash ^= zh;
+    }
     b->mg[side] += mg_table[eidx][pst_to];
     b->eg[side] += eg_table[eidx][pst_to];
 
@@ -366,11 +378,15 @@ void board_make(board_t *b, move_t m, undo_t *u)
         promo_eidx = EVAL_INDEX(promo_type);
 
         /* Remove pawn hash at destination, add promoted piece hash */
-        b->hash ^= zobrist_piece[pidx][to64];
-        b->lock ^= lock_piece[pidx][to64];
-        b->pawn_hash ^= zobrist_piece[pidx][to64];
-        b->hash ^= zobrist_piece[promo_pidx][to64];
-        b->lock ^= lock_piece[promo_pidx][to64];
+        {
+            zhash_t pawn_zh = zobrist_piece[pidx][to64];
+            zhash_t promo_zh = zobrist_piece[promo_pidx][to64];
+            b->hash ^= pawn_zh;
+            b->lock ^= lock_piece[pidx][to64];
+            b->pawn_hash ^= pawn_zh;
+            b->hash ^= promo_zh;
+            b->lock ^= lock_piece[promo_pidx][to64];
+        }
 
         /* Swap pawn eval for promoted piece eval at destination */
         b->mg[side] -= mg_table[eidx][pst_to];
