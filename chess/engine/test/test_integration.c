@@ -466,6 +466,7 @@ static void test_game_end(void)
 {
     int8_t board[8][8];
     engine_hooks_t hooks;
+    engine_move_t m;
     uint8_t status;
 
     printf("\n=== Game End Detection Tests ===\n");
@@ -535,6 +536,45 @@ static void test_game_end(void)
         PASS("engine_in_check() agrees");
     else
         FAIL("engine_in_check", "returned false when in check");
+
+    /* Threefold repetition:
+       Start from K+N vs K+N and repeat the full position twice.
+       Draw should trigger only on the 3rd occurrence. */
+    engine_init(&hooks);
+    memset(board, 0, sizeof(board));
+    board[7][4] = 6;    /* W_KING e1 */
+    board[0][4] = -6;   /* B_KING e8 */
+    board[7][6] = 2;    /* W_KNIGHT g1 */
+    board[0][6] = -2;   /* B_KNIGHT g8 */
+    set_position(board, 1, 0, ENGINE_EP_NONE, ENGINE_EP_NONE);
+
+    m.from_row = 7; m.from_col = 6; m.to_row = 5; m.to_col = 5; m.flags = 0; /* Ng1-f3 */
+    status = engine_make_move(m);
+    m.from_row = 0; m.from_col = 6; m.to_row = 2; m.to_col = 5; m.flags = 0; /* ...Ng8-f6 */
+    status = engine_make_move(m);
+    m.from_row = 5; m.from_col = 5; m.to_row = 7; m.to_col = 6; m.flags = 0; /* Nf3-g1 */
+    status = engine_make_move(m);
+    m.from_row = 2; m.from_col = 5; m.to_row = 0; m.to_col = 6; m.flags = 0; /* ...Nf6-g8 */
+    status = engine_make_move(m);
+
+    if (status == ENGINE_STATUS_NORMAL)
+        PASS("No draw on 2nd occurrence");
+    else
+        FAIL("Threefold early draw", "expected NORMAL, got %d", status);
+
+    m.from_row = 7; m.from_col = 6; m.to_row = 5; m.to_col = 5; m.flags = 0; /* Ng1-f3 */
+    status = engine_make_move(m);
+    m.from_row = 0; m.from_col = 6; m.to_row = 2; m.to_col = 5; m.flags = 0; /* ...Ng8-f6 */
+    status = engine_make_move(m);
+    m.from_row = 5; m.from_col = 5; m.to_row = 7; m.to_col = 6; m.flags = 0; /* Nf3-g1 */
+    status = engine_make_move(m);
+    m.from_row = 2; m.from_col = 5; m.to_row = 0; m.to_col = 6; m.flags = 0; /* ...Nf6-g8 */
+    status = engine_make_move(m);
+
+    if (status == ENGINE_STATUS_DRAW_REP)
+        PASS("Threefold repetition detection");
+    else
+        FAIL("Threefold repetition", "expected DRAW_REP, got %d", status);
 }
 
 /* ========== Test: Position Get/Set Roundtrip ========== */

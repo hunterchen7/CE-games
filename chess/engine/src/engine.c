@@ -86,6 +86,10 @@ static uint8_t compute_status(board_t *b)
     if (b->halfmove >= 100)
         return ENGINE_STATUS_DRAW_50;
 
+    /* Threefold repetition */
+    if (search_history_is_threefold(b->hash))
+        return ENGINE_STATUS_DRAW_REP;
+
     /* Insufficient material */
     if (is_insufficient_material(b))
         return ENGINE_STATUS_DRAW_MAT;

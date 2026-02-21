@@ -4,14 +4,13 @@
 #include <time.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <fileioc.h>
 #include "engine.h"
 #include "book.h"
 #include "chdata.h"
 #include "piece_sprites.h"
 
-#define VERSION "0.4"
+#define VERSION "0.4.1"
 
 /* ========== Screen & Layout ========== */
 
@@ -741,20 +740,45 @@ static void draw_menu(void)
 
 /* ========== Engine Helpers ========== */
 
+static void sync_ui_from_engine(void)
+{
+    engine_position_t pos;
+    engine_get_position(&pos);
+    memcpy(board, pos.board, sizeof(board));
+    current_turn = pos.turn;
+}
+
 /* Apply a completed move to the engine and check game status.
    Updates current_turn. Returns 1 if game is over, 0 otherwise. */
 static uint8_t apply_engine_move(engine_move_t move)
 {
+    int mover = current_turn;
+
+    /* Defensive guard: never let UI and engine diverge on a bad move. */
+    if (!engine_is_legal_move(move))
+    {
+        sync_ui_from_engine();
+        has_last_move = 0;
+        sel_r = -1; sel_c = -1;
+        legal_target_count = 0;
+        anim_active = 0;
+        ai_thinking = (game_mode == MODE_COMPUTER && current_turn != player_color) ? 1 : 0;
+        screen_dirty = 1;
+        return 0;
+    }
+
     uint8_t status = engine_make_move(move);
+    sync_ui_from_engine();
+    screen_dirty = 1;
+    sel_r = -1; sel_c = -1;
+    legal_target_count = 0;
 
     if (status == ENGINE_STATUS_CHECKMATE)
     {
         /* The side that just moved wins */
-        winner = current_turn;
+        winner = mover;
         game_over_reason = status;
-        current_turn = -current_turn;
-        sel_r = -1; sel_c = -1;
-        legal_target_count = 0;
+        ai_thinking = 0;
         state = STATE_GAMEOVER;
         return 1;
     }
@@ -763,21 +787,16 @@ static uint8_t apply_engine_move(engine_move_t move)
     {
         winner = 0;
         game_over_reason = status;
-        current_turn = -current_turn;
-        sel_r = -1; sel_c = -1;
-        legal_target_count = 0;
+        ai_thinking = 0;
         state = STATE_GAMEOVER;
         return 1;
     }
 
-    /* switch turn */
-    current_turn = -current_turn;
-    sel_r = -1; sel_c = -1;
-    legal_target_count = 0;
-
     /* trigger AI if needed */
     if (game_mode == MODE_COMPUTER && current_turn != player_color)
         ai_thinking = 1;
+    else
+        ai_thinking = 0;
 
     return 0;
 }
@@ -1066,6 +1085,18 @@ static void start_move_anim(int from_r, int from_c, int to_r, int to_c)
     if (ms < 1) ms = 1; /* guard against zero duration */
 
     anim_piece = board[from_r][from_c];
+    if (anim_piece == EMPTY)
+    {
+        /* Self-heal if the UI board drifted from engine state. */
+        sync_ui_from_engine();
+        anim_piece = board[from_r][from_c];
+        if (anim_piece == EMPTY)
+        {
+            /* Fallback: skip animation and apply move directly. */
+            apply_engine_move(pending_move);
+            return;
+        }
+    }
     anim_captured = board[to_r][to_c];
     anim_from_r = from_r; anim_from_c = from_c;
     anim_to_r = to_r; anim_to_c = to_c;
@@ -1157,6 +1188,11 @@ static void draw_anim_frame(void)
     if (elapsed >= duration)
     {
         finish_move();
+        if (state == STATE_PLAYING && screen_dirty)
+        {
+            draw_playing();
+            screen_dirty = 0;
+        }
         return;
     }
 
@@ -1279,8 +1315,11 @@ static void update_playing(void)
             if (new7 & kb_Right) cur_c = (cur_c < 7) ? cur_c + 1 : 7;
         }
 
-        /* if only the cursor moved (no buttons), do a fast partial redraw */
-        if (new7 && !new6 && !new1 && (cur_r != old_r || cur_c != old_c))
+        /* if only the cursor moved (no buttons), do a fast partial redraw.
+           Never do this while the board is dirty (e.g., right after a move),
+           or the moved piece may never get a full redraw. */
+        if (!screen_dirty && new7 && !new6 && !new1 &&
+            (cur_r != old_r || cur_c != old_c))
         {
             draw_cursor_move(old_r, old_c);
             return;

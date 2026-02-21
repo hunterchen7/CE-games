@@ -170,17 +170,29 @@ void search_history_set_irreversible(void)
     pos_history_irreversible = pos_history_count;
 }
 
-static uint8_t is_repetition(zhash_t hash)
+static uint8_t repetition_count(zhash_t hash)
 {
     int i;
-    if (pos_history_count < 3) return 0;
-    /* Current position is at pos_history[count-1].
-       Same side to move = positions at count-3, count-5, etc. */
-    for (i = (int)pos_history_count - 3;
+    uint8_t count = 0;
+    if (pos_history_count == 0) return 0;
+    /* Same side to move = positions at count-1, count-3, count-5, etc. */
+    for (i = (int)pos_history_count - 1;
          i >= (int)pos_history_irreversible; i -= 2) {
-        if (pos_history[i] == hash) return 1;
+        if (pos_history[i] == hash)
+            count++;
     }
-    return 0;
+    return count;
+}
+
+uint8_t search_history_is_threefold(zhash_t hash)
+{
+    return repetition_count(hash) >= 3;
+}
+
+static uint8_t is_repetition(zhash_t hash)
+{
+    /* Search treats one prior occurrence as drawable (>= 2 total). */
+    return repetition_count(hash) >= 2;
 }
 
 /* ========== Time Check ========== */
@@ -214,6 +226,9 @@ void search_init(void)
     tt_clear();
     search_history_clear();
     move_sp = 0;
+    root_count = 0;
+    root_count_pending = 0;
+    search_best_root_move = MOVE_NONE;
     for (i = 0; i < MAX_PLY; i++) {
         killers[i][0] = MOVE_NONE;
         killers[i][1] = MOVE_NONE;
@@ -1050,6 +1065,9 @@ search_result_t search_go(board_t *b, const search_limits_t *limits)
     search_nodes = 0;
     search_stopped = 0;
     search_best_root_move = MOVE_NONE;
+    /* Root candidates are position-specific: never carry across searches. */
+    root_count = 0;
+    root_count_pending = 0;
     move_sp = 0;
 
     /* Time management */
